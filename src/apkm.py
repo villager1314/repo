@@ -16,7 +16,7 @@ import urllib.parse
 import urllib.request
 import zipfile
 
-VERSION = '0.1.0'
+VERSION = '0.2.0'
 BASE_URL = 'https://villager1314.github.io/repo'
 CONFIG = Path(os.environ.get('XDG_CONFIG_HOME', str(Path.home()/'.config'))) / 'apkm'
 CACHE = Path(os.environ.get('XDG_CACHE_HOME', str(Path.home()/'.cache'))) / 'apkm'
@@ -122,10 +122,55 @@ def validate_index(index):
     return index
 
 
+FDROID_FINGERPRINT = '37D2C98789D8311948394E3E41E7044E1DBA2E89'
+
+def normalize_fdroid(data):
+    """Convert the signed v1 index, retaining stable APK variants for selection."""
+    if not isinstance(data.get('apps'), list) or not isinstance(data.get('packages'), dict):
+        raise Failure('无效 F-Droid v1 索引', 4)
+    result = []
+    for app in data['apps']:
+        package = app['packageName']
+        suggested = app.get('suggestedVersionCode')
+        variants = []
+        for v in data['packages'].get(package, []):
+            # Honor the maintainer's stable ceiling; never silently choose a beta.
+            if suggested is None or int(v['versionCode']) > int(suggested):
+                continue
+            if v.get('hashType') != 'sha256' or not v.get('apkName', '').endswith('.apk'):
+                continue
+            item = dict(name=package, package_id=package,
+                        description=app.get('name', app.get('localized', {}).get('en-US', {}).get('name', package)) + ' — ' + app.get('summary', app.get('localized', {}).get('en-US', {}).get('summary', '')),
+                        version_code=int(v['versionCode']), version_name=v.get('versionName', ''),
+                        min_sdk=int(v.get('minSdkVersion', v.get('sdkVersion', 1))), max_sdk=int(v.get('maxSdkVersion', 0)),
+                        abis=v.get('nativecode') or ['any'], sha256=v['hash'],
+                        size=v['size'], url=v['apkName'], features=v.get('features', []))
+            if item['abis'] and all(a in ['any','arm64-v8a','armeabi-v7a','x86','x86_64'] for a in item['abis']):
+                validate_index(dict(schema_version=1, packages=[item]))
+                variants.append(item)
+        if variants:
+            variants.sort(key=lambda v: v['version_code'], reverse=True)
+            result.append(dict(variants[0], variants=variants))
+    return dict(schema_version=1, revision=data['repo']['timestamp'], packages=result)
+
+
+def select_variant(package, sdk=None, abis=None):
+    for v in package.get('variants', [package]):
+        if sdk is not None and (sdk < v['min_sdk'] or (v.get('max_sdk') and sdk > v['max_sdk'])):
+            continue
+        if abis is not None and 'any' not in v['abis'] and not set(abis) & set(v['abis']):
+            continue
+        return dict(v, source_url=package['source_url'])
+    raise Failure(f'{package["name"]} 没有兼容设备的稳定 APK', 5)
+
+
 def refresh(name, src, out):
     url = validate_url(src['url']).rstrip('/') + '/'
-    index = fetch(urllib.parse.urljoin(url, 'index.json'), MAX_INDEX)
-    sig = fetch(urllib.parse.urljoin(url, 'index.json.sig'), 65536)
+    fdroid = src.get('type') == 'fdroid'
+    filename = 'index-v1.json' if fdroid else 'index.json'
+    out.event('源', f'{name}：下载并验证索引')
+    index = fetch(urllib.parse.urljoin(url, filename), 128 * 1024 * 1024 if fdroid else MAX_INDEX)
+    sig = fetch(urllib.parse.urljoin(url, filename + ('.asc' if fdroid else '.sig')), 65536)
     key = Path(src['keyring'])
     if not key.is_file():
         raise Failure(f'缺少可信公钥：{key}', 4)
@@ -136,10 +181,9 @@ def refresh(name, src, out):
         result = run(['gpgv','--homedir',d,'--keyring',str(key.resolve()),str(p/'sig'),str(p/'index')],check=False)
         if result.returncode:
             raise Failure('APK 源签名验证失败，未更新缓存', 4)
-    validate_index(json.loads(index))
+    current = normalize_fdroid(json.loads(index)) if fdroid else validate_index(json.loads(index))
     target = CONFIG/'indexes'/f'{name}.json'
     previous = read_json(target)
-    current = json.loads(index)
     if type(current.get('revision')) is not int or current['revision'] < 1:
         raise Failure('索引 revision 必须为正整数',4)
     if previous and current['revision'] < previous['revision']:
@@ -318,7 +362,7 @@ def parser(program):
         upgrade=s.add_parser('upgrade',help='更新源中可识别的应用'); upgrade.add_argument('names',nargs='*'); upgrade.set_defaults(download_only=False,output_dir=None)
         source=s.add_parser('source',help='管理软件源'); sub=source.add_subparsers(dest='source_command',required=True)
         sub.add_parser('list')
-        add=sub.add_parser('add'); add.add_argument('name'); add.add_argument('url'); add.add_argument('--keyring',required=True,help='事先可信的 GPG 二进制公钥环路径')
+        add=sub.add_parser('add'); add.add_argument('name'); add.add_argument('url'); add.add_argument('--type',choices=['apkm','fdroid'],default='apkm',help='源索引格式'); add.add_argument('--keyring',help='事先可信的 GPG 二进制公钥环路径')
         remove=sub.add_parser('remove');remove.add_argument('name')
     info=s.add_parser('info',help='查询安卓应用' if apkg else '查询源中的软件');info.add_argument('name')
     s.add_parser('list',help='列出设备上的应用')
@@ -364,10 +408,12 @@ def main(argv=None,program=None):
                     for n,v in all_sources.items(): print(n,v['url'])
             elif args.source_command=='add':
                 if not re.fullmatch('[a-zA-Z0-9_-]+',args.name):raise Failure('源名仅允许字母、数字、下划线和连字符',2)
-                key=Path(args.keyring).expanduser().resolve()
+                key=Path(args.keyring).expanduser().resolve() if args.keyring else Path(__file__).resolve().parent/'fdroid.gpg'
+                if not args.keyring and (args.type != 'fdroid' or args.url.rstrip('/') != 'https://f-droid.org/repo'):
+                    raise Failure('该源必须用 --keyring 指定事先可信的公钥',2)
                 if not key.is_file():raise Failure('可信公钥环不存在',2)
                 if args.name in all_sources:raise Failure('同名源已存在；请先删除',2)
-                src={'url':validate_url(args.url).rstrip('/'),'keyring':str(key)}
+                src={'url':validate_url(args.url).rstrip('/'),'keyring':str(key),'type':args.type}
                 refresh(args.name,src,out)
                 all_sources[args.name]=src;write_json(CONFIG/'sources.json',all_sources)
             else:
@@ -398,6 +444,10 @@ def main(argv=None,program=None):
                 p=packages[name]
                 if backend:
                     sdk,abis=backend.device_info()
+                    p=select_variant(p,sdk,abis)
+                    if p.get('features'):
+                        available=set(line.removeprefix('feature:').split('=')[0] for line in backend.shell(['pm','list','features']).stdout.splitlines())
+                        if not set(p['features']) <= available:raise Failure(f'{name} 缺少必需设备功能',5)
                     if sdk<p['min_sdk'] or ('any' not in p['abis'] and not set(abis)&set(p['abis'])):
                         raise Failure(f'{name} 不适用于设备 API {sdk} / {abis}',5)
                     version=backend.version(p['package_id'])
@@ -405,6 +455,7 @@ def main(argv=None,program=None):
                         out.event('跳过',f'{name} 未安装');continue
                     if version is not None and version>=p['version_code']:
                         out.event('跳过',f'{name} 已安装相同或更新版本');continue
+                if not backend:p=select_variant(p)
                 path=download(p,args,out)
                 if backend:
                     args.mode=backend.mode

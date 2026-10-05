@@ -4,7 +4,7 @@ import argparse, base64, gzip, hashlib, io, json, os, shutil, subprocess, tarfil
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
 SITE=ROOT/'site'
-VER='0.1.0'
+VER='0.2.0'
 PGP_KEY=None
 def call(cmd,**kw):return subprocess.run(cmd,check=True,**kw)
 def sign(path,key):
@@ -23,6 +23,7 @@ def build(key,private_key=None):
  (stage/'usr/bin').mkdir(parents=True)
  (stage/'usr/lib/apkm').mkdir(parents=True)
  shutil.copy(ROOT/'src/apkm.py',stage/'usr/lib/apkm/apkm.py')
+ shutil.copy(ROOT/'src/fdroid.gpg',stage/'usr/lib/apkm/fdroid.gpg')
  for command in ['apkm','apkg']:
   path=stage/'usr/bin'/command
   path.write_text('#!/usr/bin/python3\nimport sys\nsys.path.insert(0,"/usr/lib/apkm")\nfrom apkm import main\nsys.exit(main(program="'+command+'"))\n')

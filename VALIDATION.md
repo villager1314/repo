@@ -19,3 +19,7 @@
 
 Arch 包和数据库按照 ALPM 归档格式生成；没有使用 makepkg/repo-add 构建，首次在 Arch 上发布前建议用 pacman 验证。
 签名由构建端 PGPy 生成，客户端实际使用 gpgv/apt 验证通过。
+
+## 0.2.0 F-Droid
+
+16 automated tests passed. Verified real official index GPG signature against documented primary fingerprint; normalized 4478 stable applications. Downloaded com.zinaro.cachecleanerwidget (8947 bytes), verified signed SHA256, size and manifest; modified official index rejected. Four Linux repository signatures and isolated APT checks passed, as did Termux package checks. Actual Android installation and native Arch/Termux devices remain untested.

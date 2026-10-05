@@ -5,7 +5,7 @@ from pathlib import Path
 import build as signing
 ROOT=Path(__file__).resolve().parents[1]
 PREFIX=Path('/data/data/com.termux/files/usr')
-VERSION='0.1.0-1'
+VERSION='0.2.0-1'
 def build_termux(key=None,private_key=None):
  if private_key:
   import pgpy
@@ -17,6 +17,7 @@ def build_termux(key=None,private_key=None):
  (target/'bin').mkdir(parents=True)
  (target/'lib/apkm').mkdir(parents=True)
  shutil.copy(ROOT/'src/apkm.py',target/'lib/apkm/apkm.py')
+ shutil.copy(ROOT/'src/fdroid.gpg',target/'lib/apkm/fdroid.gpg')
  for command in ['apkm','apkg']:
   path=target/'bin'/command
   path.write_text(f'#!{PREFIX}/bin/python\nimport sys\nfrom pathlib import Path\nsys.path.insert(0,str(Path(__file__).resolve().parents[1]/"lib/apkm"))\nfrom apkm import main\nsys.exit(main(program="{command}"))\n')

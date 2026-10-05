@@ -1,4 +1,4 @@
-# APKM / APKG 0.1.0
+# APKM / APKG 0.2.0
 
 从签名 APK 软件源下载应用，通过 ADB 或安卓宿主 root 安装。
 提供 Debian（amd64 / arm64）及 Arch（x86_64 / aarch64）四个软件源。
@@ -47,7 +47,7 @@ sudo apt update
 sudo apt install apkm
 ```
 
-也可以先安装随附的本地 deb：`sudo apt install ./apkm_0.1.0-1_all.deb`。
+也可以先安装随附的本地 deb：`sudo apt install ./apkm_0.2.0-1_all.deb`。
 包包含 apkm、apkg、两份 man 手册和 APK 源公钥。
 
 ## Arch / Arch Linux ARM 安装
@@ -159,3 +159,13 @@ PGPy 仅为可选构建依赖，不是 apkm/apkg 的运行依赖。
 - Linux/安卓设备 ABI 不同；下载选择依据目标安卓设备，而非 Linux CPU。
 
 详见 VALIDATION.md：本环境没有真实安卓设备及 Arch/ARM64 系统，不能声称已在这些系统实机通过。
+
+## F-Droid 支持（0.2.0）
+
+```sh
+apkm source add fdroid https://f-droid.org/repo --type fdroid
+apkm search termux
+apkm install com.termux
+```
+
+使用官方 GPG 签名索引、稳定版本及设备兼容性选择；[详细说明](docs/FDROID.md)。

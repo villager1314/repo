@@ -15,6 +15,12 @@
               Verify and add a repository using a  previously  trusted  binary
               GPG keyring.
 
+       [1msource add NAME URL --type fdroid [--keyring PATH][0m
+              Add   a  GPG-signed  F-Droid  v1  repository.  The  official  f-
+              droid.org/repo uses the bundled official key; other repositories
+              require --keyring.  Stable variants are selected by Android  API
+              and ABI.
+
        [1msource list | source remove NAME[0m
               List or remove configured repositories.
 
@@ -85,4 +91,4 @@
 [1mSEE ALSO[0m
        [1mapkg[22m(1), [1madb[22m(1)
 
-apkm 0.1.0                        2026-10-05                           [4mAPKM[24m(1)
+apkm 0.2.0                        2026-10-05                           [4mAPKM[24m(1)

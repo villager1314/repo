@@ -4,7 +4,7 @@ ROOT=Path(__file__).resolve().parents[1]
 PREFIX=Path('data/data/com.termux/files/usr')
 class Termux(unittest.TestCase):
  def test_package_layout_dependencies_and_launch(self):
-  deb=ROOT/'site/termux/apkm_0.1.0-1_all.deb'
+  deb=ROOT/'site/termux/apkm_0.2.0-1_all.deb'
   control=subprocess.run(['dpkg-deb','-f',str(deb)],check=True,capture_output=True,text=True).stdout
   self.assertIn('Architecture: all',control)
   self.assertIn('Depends: python (>= 3.9), android-tools, gpgv',control)

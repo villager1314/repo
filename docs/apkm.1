@@ -1,4 +1,4 @@
-.TH APKM 1 "2026-10-05" "apkm 0.1.0" "User Commands"
+.TH APKM 1 "2026-10-05" "apkm 0.2.0" "User Commands"
 .SH NAME
 apkm \- signed Android APK repository client
 .SH SYNOPSIS
@@ -11,6 +11,11 @@ apkg to install them on an authorized Android target.
 .TP
 .B source add NAME URL --keyring PATH
 Verify and add a repository using a previously trusted binary GPG keyring.
+.TP
+.B source add NAME URL --type fdroid [--keyring PATH]
+Add a GPG-signed F-Droid v1 repository. The official f-droid.org/repo
+uses the bundled official key; other repositories require --keyring.
+Stable variants are selected by Android API and ABI.
 .TP
 .B source list | source remove NAME
 List or remove configured repositories.
