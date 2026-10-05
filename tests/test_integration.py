@@ -46,8 +46,11 @@ else:sys.exit(8)
    data=content.getvalue()
    package={'name':'testapp','package_id':'com.example.test','version_code':7,'version_name':'0.7','min_sdk':21,'abis':['arm64-v8a'],'url':'test.apk','source_url':'https://example.invalid/android/','size':len(data),'sha256':hashlib.sha256(data).hexdigest()}
    env={'PATH':str(bin)+os.pathsep+os.environ['PATH'],'FAKE_ANDROID_STATE':str(state),'XDG_CONFIG_HOME':str(root/'config'),'XDG_CACHE_HOME':str(root/'cache')}
+   config=root/'config/apkm'
+   m.write_json(config/'sources.json',{'test':{'url':'https://example.invalid/android/','keyring':str(ROOT/'site/keys/apkm.gpg')}})
+   m.write_json(config/'indexes/test.json',{'schema_version':1,'revision':1,'packages':[package]})
    output=io.StringIO()
-   with patch.dict(os.environ,env),patch.object(m,'CACHE',root/'cache'),patch.object(m,'catalog',return_value={'testapp':package}),patch.object(m.urllib.request,'build_opener') as opener,contextlib.redirect_stdout(output):
+   with patch.dict(os.environ,env),patch.object(m,'CACHE',root/'cache'),patch.object(m,'CONFIG',config),patch.object(m,'fetch',side_effect=AssertionError('installation must not fetch index')),patch.object(m.urllib.request,'build_opener') as opener,contextlib.redirect_stdout(output):
     opener.return_value.open.return_value=io.BytesIO(data)
     result=m.main(['--mode','adb','install','testapp'])
    self.assertEqual(result,0);self.assertEqual(state.read_text(),'7')

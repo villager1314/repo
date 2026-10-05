@@ -35,7 +35,7 @@ gpg --show-keys --with-fingerprint "$PREFIX/share/keyrings/apkm.gpg"
 ```sh
 printf 'deb [signed-by=%s/share/keyrings/apkm.gpg] https://villager1314.github.io/repo/termux/ ./\n' "$PREFIX" > "$PREFIX/etc/apt/sources.list.d/apkm.list"
 apt update
-apt install apkm
+apt install --no-install-recommends apkm
 ```
 
 安装包会自动依赖 `python`、`android-tools`、`gpgv`。
@@ -60,7 +60,7 @@ man apkm
 
 ```sh
 apt update
-apt install apkm
+apt install --no-install-recommends apkm
 apkm --version
 ```
 
@@ -73,7 +73,9 @@ apkm info org.fdroid.fdroid
 ```
 
 官方源使用包内自带的可信公钥，无需额外指定 `--keyring`。
-首次索引下载约 64 MB，当前查询会重新下载并验证完整索引。
+添加源或执行 `apkm update` 时下载并验证索引，约 64 MB。
+0.3.0 起，搜索、查询和安装读取本地已验证索引，不再重复下载。
+旧版 0.2.0 已下载的索引可直接沿用，升级后无需重新添加源。
 APK 直接从 F-Droid 下载，无需上传到自己的 GitHub Pages。
 自建 APK 源可以同时保留；软件名使用 Android 包名。
 
@@ -99,6 +101,60 @@ apkm --mode root install org.fdroid.fdroid
 仅下载模式未连接设备，不能保证所选架构适合你的手机。
 工具先验证索引 GPG 签名，再核对 APK 大小和 SHA256；Android 负责安装及更新签名兼容性检查。
 第三方源和当前限制见 [F-Droid 说明](https://github.com/villager1314/repo/blob/main/docs/FDROID.md)。
+
+## 镜像与缓存（apkm 0.3.0）
+
+已有源可以原地切换到清华镜像，不用另建同名应用来源：
+
+```sh
+apkm source set-url fdroid https://mirrors.tuna.tsinghua.edu.cn/fdroid/repo
+```
+
+将 `fdroid` 替换为 `apkm source list` 中实际的源名。
+该命令下载并验证镜像索引，保留原有可信公钥和索引版本回退检查。
+镜像暂未同步到已有索引版本时会拒绝切换，稍后再试。
+若之前同时配置了 `fdroid` 和 `fdroid-tuna`，保留镜像后可执行 `apkm source remove fdroid`，删除其配置和缓存。
+
+首次添加清华镜像也可直接使用内置官方公钥：
+
+```sh
+apkm source add fdroid-tuna https://mirrors.tuna.tsinghua.edu.cn/fdroid/repo --type fdroid
+```
+
+定期手动更新，随后可连续离线搜索和查询：
+
+```sh
+apkm update
+apkm search termux
+apkm info com.termux
+```
+
+也可 `apkm update fdroid-tuna` 只刷新指定源。没有缓存会提示先 update。
+同一源每次覆盖旧缓存，不保留重复的历史索引；0.3.0 也会校验并复用相同 APK 下载。
+查看索引与 APK 缓存占用：
+
+```sh
+du -sh "${XDG_CONFIG_HOME:-$HOME/.config}/apkm/indexes"
+du -sh "${XDG_CACHE_HOME:-$HOME/.cache}/apkm/apks"
+```
+
+## 安装依赖与验签故障
+
+Python 在 Termux 中推荐 pip，pip 又推荐 clang 等编译工具。
+APKM 仅需 Python 标准库；使用 `apt install --no-install-recommends apkm` 可跳过推荐的开发工具。
+需要的 Python、android-tools、gpgv 及其运行库仍会安装，无须整体 full-upgrade。
+
+若出现 `gpgv: Fatal: libgcrypt is too old`，是本机 gpgv 和运行库版本不匹配，两个软件源都会受影响。
+先尝试从已有索引升级相关库：
+
+```sh
+apt install --only-upgrade libgcrypt libgpg-error
+gpgv --version
+apt update
+apt install --no-install-recommends apkm
+```
+
+如果旧索引没有可用的新版库，需要从 Termux 官方源获取匹配当前架构的 libgcrypt 包并验证后安装，再恢复 apt update；不要关闭签名校验。没有必要因此执行 full-upgrade。
 
 ## 无 root：通过无线 ADB 安装
 

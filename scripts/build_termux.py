@@ -5,7 +5,7 @@ from pathlib import Path
 import build as signing
 ROOT=Path(__file__).resolve().parents[1]
 PREFIX=Path('/data/data/com.termux/files/usr')
-VERSION='0.2.0-1'
+VERSION='0.3.0-1'
 def build_termux(key=None,private_key=None):
  if private_key:
   import pgpy

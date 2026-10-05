@@ -23,3 +23,7 @@ Arch 包和数据库按照 ALPM 归档格式生成；没有使用 makepkg/repo-a
 ## 0.2.0 F-Droid
 
 16 automated tests passed. Verified real official index GPG signature against documented primary fingerprint; normalized 4478 stable applications. Downloaded com.zinaro.cachecleanerwidget (8947 bytes), verified signed SHA256, size and manifest; modified official index rejected. Four Linux repository signatures and isolated APT checks passed, as did Termux package checks. Actual Android installation and native Arch/Termux devices remain untested.
+
+## 0.3.0 cache and Termux fixes
+
+21 tests pass, including offline search/info with legacy 0.2.0 cache; missing-cache guidance without a network request; actual apkg subprocess install using the cached catalog; selected-source update; mirror failure preserving configuration; verified APK reuse and corrupt APK redownload. Existing actual-signature and rollback tests still pass. Four repository checks and isolated APT loading pass; Termux archive and APT aarch64/x86_64 checks pass. No physical Android device installation test.

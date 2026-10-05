@@ -1,0 +1,8 @@
+usage: apkm source [-h] {list,add,set-url,remove} ...
+
+positional arguments:
+  {list,add,set-url,remove}
+    set-url             更换镜像并验证索引，保留可信公钥及回退检查
+
+options:
+  -h, --help            show this help message and exit

@@ -1,4 +1,4 @@
-# F-Droid 源（apkm 0.2.0）
+# F-Droid 源（apkm 0.3.0）
 
 Debian、Arch 和 Termux 使用相同命令：
 
@@ -19,9 +19,17 @@ apkm install --download-only --output-dir ./apks com.termux
 
 下载模式选最新稳定 APK；存在多个架构时，未连接设备不能保证适合你的手机。安装模式按设备 API、ABI 和必需功能检查，允许选择兼容的旧稳定版本；不支持 split APK。
 
-验证官方 `index-v1.json.asc` 的 GPG 签名，再检查每个 APK 的大小和 SHA256。内置官方公钥指纹为 `37D2C98789D8311948394E3E41E7044E1DBA2E89`，来源： https://f-droid.org/docs/Release_Channels_and_Signing_Keys/ 。时间戳倒退或签名失败时拒绝替换缓存。每次查询会重新验证完整索引，首次下载约 64 MB；当前尚未实现增量更新。
+验证官方 `index-v1.json.asc` 的 GPG 签名，再检查每个 APK 的大小和 SHA256。内置官方公钥指纹为 `37D2C98789D8311948394E3E41E7044E1DBA2E89`，来源： https://f-droid.org/docs/Release_Channels_and_Signing_Keys/ 。时间戳倒退或签名失败时拒绝替换缓存。首次添加源及 `apkm update` 会下载并验证完整索引，约 64 MB；当前尚未实现增量更新。搜索、详情及安装使用本地已验证索引。旧版缓存可以沿用，更新时间会显示在输出中。
 
-第三方 F-Droid 格式源须提供事先可信的二进制 GPG 公钥环：
+清华与南阳理工镜像可复用内置官方公钥。已有源原地切换示例：
+
+```sh
+apkm source set-url fdroid https://mirrors.tuna.tsinghua.edu.cn/fdroid/repo
+```
+
+切换成功后保留源名及回退检查，不另存重复源。只刷新单个源可用 `apkm update fdroid`。
+
+其他第三方 F-Droid 格式源须提供事先可信的二进制 GPG 公钥环：
 
 ```sh
 apkm source add other https://example.org/fdroid/repo --type fdroid --keyring ./trusted.gpg

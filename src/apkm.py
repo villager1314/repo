@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""APKM/APKG 0.1.0: signed APK repository client and Android install backend."""
+"""APKM/APKG 0.3.0: signed APK repository client and Android install backend."""
 import argparse
 import hashlib
 import json
@@ -16,7 +16,7 @@ import urllib.parse
 import urllib.request
 import zipfile
 
-VERSION = '0.2.0'
+VERSION = '0.3.0'
 BASE_URL = 'https://villager1314.github.io/repo'
 CONFIG = Path(os.environ.get('XDG_CONFIG_HOME', str(Path.home()/'.config'))) / 'apkm'
 CACHE = Path(os.environ.get('XDG_CACHE_HOME', str(Path.home()/'.cache'))) / 'apkm'
@@ -79,11 +79,21 @@ class HTTPSRedirect(urllib.request.HTTPRedirectHandler):
         return super().redirect_request(req, fp, code, msg, headers, newurl)
 
 
-def fetch(url, limit):
+def fetch(url, limit, out=None):
     validate_url(url)
     req = urllib.request.Request(url, headers={'User-Agent': f'apkm/{VERSION}'})
     with urllib.request.build_opener(HTTPSRedirect()).open(req, timeout=30) as r:
-        data = r.read(limit+1)
+        chunks = []; done = 0; last = time.monotonic()
+        while True:
+            chunk = r.read(min(128*1024, limit + 1 - done))
+            if not chunk: break
+            chunks.append(chunk); done += len(chunk)
+            if done > limit: break
+            now = time.monotonic()
+            if out and not out.args.no_progress and now-last >= 1:
+                out.event('索引下载', f'{done / (1024*1024):.1f} MiB', bytes=done)
+                last = now
+        data = b''.join(chunks)
     if len(data) > limit:
         raise Failure('源索引或签名超过大小限制', 4)
     return data
@@ -169,7 +179,7 @@ def refresh(name, src, out):
     fdroid = src.get('type') == 'fdroid'
     filename = 'index-v1.json' if fdroid else 'index.json'
     out.event('源', f'{name}：下载并验证索引')
-    index = fetch(urllib.parse.urljoin(url, filename), 128 * 1024 * 1024 if fdroid else MAX_INDEX)
+    index = fetch(urllib.parse.urljoin(url, filename), 128 * 1024 * 1024 if fdroid else MAX_INDEX, out=out)
     sig = fetch(urllib.parse.urljoin(url, filename + ('.asc' if fdroid else '.sig')), 65536)
     key = Path(src['keyring'])
     if not key.is_file():
@@ -188,6 +198,8 @@ def refresh(name, src, out):
         raise Failure('索引 revision 必须为正整数',4)
     if previous and current['revision'] < previous['revision']:
         raise Failure('拒绝回退到旧版源索引',4)
+    current['updated_at'] = int(time.time())
+    current['source_url'] = src['url'].rstrip('/')
     write_json(target,current)
     out.event('源', f'{name}：签名验证通过，{len(current["packages"])} 个软件')
 
@@ -198,9 +210,16 @@ def catalog(out):
     if not configured:
         raise Failure('尚未添加 APK 源。运行 apkm source add --help 查看方法。',2)
     for name, src in configured.items():
-        # Verify the signature on every fetch; do not silently use stale metadata.
-        refresh(name,src,out)
-        for p in read_json(CONFIG/'indexes'/f'{name}.json')['packages']:
+        target = CONFIG/'indexes'/f'{name}.json'
+        cached = read_json(target)
+        if cached is None:
+            raise Failure(f'{name} 没有本地索引，请先运行 apkm update {name}', 2)
+        if cached.get('source_url', src['url'].rstrip('/')) != src['url'].rstrip('/'):
+            raise Failure(f'{name} 的地址已改变，请先运行 apkm update {name}', 2)
+        validate_index(cached)
+        updated = cached.get('updated_at', int(target.stat().st_mtime))
+        out.event('缓存', f'{name}：本地索引，更新于 {time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(updated))}；刷新请运行 apkm update', updated_at=updated)
+        for p in cached['packages']:
             if p['name'] in result:
                 raise Failure(f'多个源包含同名软件 {p["name"]}，请保留一个对应源',2)
             result[p['name']] = dict(p, source_url=src['url'])
@@ -315,6 +334,14 @@ def download(p,args,out):
     dest=Path(args.output_dir).expanduser() if args.output_dir else CACHE/'apks'
     dest.mkdir(parents=True,exist_ok=True)
     final=dest/f'{p["name"]}-{p["version_code"]}-{p["sha256"][:12]}.apk'
+    if final.is_file() and final.stat().st_size == p['size']:
+        digest = hashlib.sha256()
+        with final.open('rb') as f:
+            for chunk in iter(lambda: f.read(128*1024), b''): digest.update(chunk)
+        if digest.hexdigest() == p['sha256']:
+            check_apk(final)
+            out.event('缓存', f'{p["name"]}：复用已校验 APK', path=str(final))
+            return final
     fd,temp=tempfile.mkstemp(prefix='.download-',dir=dest)
     done=0; digest=hashlib.sha256(); start=time.monotonic(); last=0
     try:
@@ -358,11 +385,12 @@ def parser(program):
         ins.add_argument('--download-only',action='store_true',help='只下载并校验')
         ins.add_argument('--output-dir',help='下载目录')
         search=s.add_parser('search',help='搜索软件源'); search.add_argument('keyword')
-        update=s.add_parser('update',help='验证签名并刷新索引')
+        update=s.add_parser('update',help='下载、验证签名并刷新本地索引'); update.add_argument('names',nargs='*',help='指定源名；省略则刷新所有源')
         upgrade=s.add_parser('upgrade',help='更新源中可识别的应用'); upgrade.add_argument('names',nargs='*'); upgrade.set_defaults(download_only=False,output_dir=None)
         source=s.add_parser('source',help='管理软件源'); sub=source.add_subparsers(dest='source_command',required=True)
         sub.add_parser('list')
         add=sub.add_parser('add'); add.add_argument('name'); add.add_argument('url'); add.add_argument('--type',choices=['apkm','fdroid'],default='apkm',help='源索引格式'); add.add_argument('--keyring',help='事先可信的 GPG 二进制公钥环路径')
+        change=sub.add_parser('set-url',help='更换镜像并验证索引，保留可信公钥及回退检查'); change.add_argument('name'); change.add_argument('url')
         remove=sub.add_parser('remove');remove.add_argument('name')
     info=s.add_parser('info',help='查询安卓应用' if apkg else '查询源中的软件');info.add_argument('name')
     s.add_parser('list',help='列出设备上的应用')
@@ -409,11 +437,16 @@ def main(argv=None,program=None):
             elif args.source_command=='add':
                 if not re.fullmatch('[a-zA-Z0-9_-]+',args.name):raise Failure('源名仅允许字母、数字、下划线和连字符',2)
                 key=Path(args.keyring).expanduser().resolve() if args.keyring else Path(__file__).resolve().parent/'fdroid.gpg'
-                if not args.keyring and (args.type != 'fdroid' or args.url.rstrip('/') != 'https://f-droid.org/repo'):
+                if not args.keyring and (args.type != 'fdroid' or args.url.rstrip('/') not in ['https://f-droid.org/repo','https://mirrors.tuna.tsinghua.edu.cn/fdroid/repo','https://mirror.nyist.edu.cn/fdroid/repo']):
                     raise Failure('该源必须用 --keyring 指定事先可信的公钥',2)
                 if not key.is_file():raise Failure('可信公钥环不存在',2)
                 if args.name in all_sources:raise Failure('同名源已存在；请先删除',2)
                 src={'url':validate_url(args.url).rstrip('/'),'keyring':str(key),'type':args.type}
+                refresh(args.name,src,out)
+                all_sources[args.name]=src;write_json(CONFIG/'sources.json',all_sources)
+            elif args.source_command=='set-url':
+                if args.name not in all_sources:raise Failure('软件源不存在',2)
+                src=dict(all_sources[args.name],url=validate_url(args.url).rstrip('/'))
                 refresh(args.name,src,out)
                 all_sources[args.name]=src;write_json(CONFIG/'sources.json',all_sources)
             else:
@@ -424,7 +457,10 @@ def main(argv=None,program=None):
         if args.command=='update':
             configured=sources()
             if not configured:raise Failure('尚未添加 APK 软件源',2)
-            for n,v in configured.items():refresh(n,v,out)
+            selected=args.names or list(configured)
+            for n in selected:
+                if n not in configured:raise Failure(f'软件源不存在：{n}',2)
+            for n in selected:refresh(n,configured[n],out)
             return 0
         if program=='apkm' and args.command in ['search','info','install','upgrade']:
             packages=catalog(out)

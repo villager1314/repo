@@ -1,0 +1,7 @@
+usage: apkm update [-h] [names ...]
+
+positional arguments:
+  names       指定源名；省略则刷新所有源
+
+options:
+  -h, --help  show this help message and exit

@@ -8,7 +8,7 @@ positional arguments:
   {install,search,update,upgrade,source,info,list,remove,doctor}
     install             从软件源下载安装
     search              搜索软件源
-    update              验证签名并刷新索引
+    update              下载、验证签名并刷新本地索引
     upgrade             更新源中可识别的应用
     source              管理软件源
     info                查询源中的软件
