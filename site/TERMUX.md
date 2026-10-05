@@ -54,6 +54,52 @@ man apkm
 初始 APK 源为空；添加自己的 APK 后才能按软件名安装。
 已有 APK 文件可以直接安装。
 
+## 使用 F-Droid 官方 APK 源（apkm 0.2.0 起）
+
+先安装或升级管理工具：
+
+```sh
+apt update
+apt install apkm
+apkm --version
+```
+
+确认版本至少为 0.2.0，然后添加 F-Droid 官方源：
+
+```sh
+apkm source add fdroid https://f-droid.org/repo --type fdroid
+apkm search fdroid
+apkm info org.fdroid.fdroid
+```
+
+官方源使用包内自带的可信公钥，无需额外指定 `--keyring`。
+首次索引下载约 64 MB，当前查询会重新下载并验证完整索引。
+APK 直接从 F-Droid 下载，无需上传到自己的 GitHub Pages。
+自建 APK 源可以同时保留；软件名使用 Android 包名。
+
+只下载 APK，不需要 root 或 ADB：
+
+```sh
+apkm install --download-only --output-dir "$HOME/apks" org.fdroid.fdroid
+```
+
+直接安装需要以下任一后端。无 root 时先按下一节配对并连接无线 ADB：
+
+```sh
+apkm --mode adb install org.fdroid.fdroid
+```
+
+已有安卓宿主 root 时：
+
+```sh
+apkm --mode root install org.fdroid.fdroid
+```
+
+安装模式按设备 API 和 ABI 选择稳定版本，并检查必需设备功能。
+仅下载模式未连接设备，不能保证所选架构适合你的手机。
+工具先验证索引 GPG 签名，再核对 APK 大小和 SHA256；Android 负责安装及更新签名兼容性检查。
+第三方源和当前限制见 [F-Droid 说明](https://github.com/villager1314/repo/blob/main/docs/FDROID.md)。
+
 ## 无 root：通过无线 ADB 安装
 
 安卓 11 或更高版本开启开发者选项中的无线调试。
