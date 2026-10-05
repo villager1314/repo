@@ -1,0 +1,39 @@
+.TH APKG 1 "2026-10-05" "apkg 0.1.0" "User Commands"
+.SH NAME
+apkg \- local APK installation backend
+.SH SYNOPSIS
+.B apkg
+[global-options] command [arguments]
+.SH COMMANDS
+.TP
+.B install FILE.apk ...
+Install or update local single APKs. Calls adb install -r or Android host
+pm install -r -S with APK bytes streamed through standard input.
+.TP
+.B list
+List applications on the selected Android device.
+.TP
+.B info PACKAGE-ID
+Show the installed versionCode.
+.TP
+.B remove PACKAGE-ID ...
+Uninstall after confirmation; application data may be removed by Android.
+.TP
+.B doctor
+Check backend selection and target Android SDK/ABI.
+.SH GLOBAL OPTIONS
+--mode auto|adb|root, --serial SERIAL, --json, --no-progress, --yes,
+--version and --help. Options precede the command.
+.SH PERMISSIONS
+ADB requires device authorization, not Android root.
+Root mode requires Android host su and package-manager access; a Linux uid of
+zero is insufficient. No backend bypasses Android signature checks.
+.SH LIMITATIONS
+Supports single APK files only. No split APK/APKS/APKM containers.
+Local validation checks ZIP format and AndroidManifest.xml presence; Android
+performs the installation and signature checks.
+.SH EXIT STATUS
+See apkm(1). A successful installation requires Android to report Success.
+.SH SEE ALSO
+.BR apkm (1),
+.BR adb (1)

@@ -1,0 +1,11 @@
+usage: apkm install [-h] [--download-only] [--output-dir OUTPUT_DIR]
+                    names [names ...]
+
+positional arguments:
+  names                 软件名
+
+options:
+  -h, --help            show this help message and exit
+  --download-only       只下载并校验
+  --output-dir OUTPUT_DIR
+                        下载目录

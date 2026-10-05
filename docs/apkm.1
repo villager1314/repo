@@ -1,0 +1,75 @@
+.TH APKM 1 "2026-10-05" "apkm 0.1.0" "User Commands"
+.SH NAME
+apkm \- signed Android APK repository client
+.SH SYNOPSIS
+.B apkm
+[global-options] command [arguments]
+.SH DESCRIPTION
+Download verified APK files from configured HTTPS repositories and invoke
+apkg to install them on an authorized Android target.
+.SH COMMANDS
+.TP
+.B source add NAME URL --keyring PATH
+Verify and add a repository using a previously trusted binary GPG keyring.
+.TP
+.B source list | source remove NAME
+List or remove configured repositories.
+.TP
+.B update
+Fetch and verify signed repository indexes.
+.TP
+.B search KEYWORD | info NAME
+Search or inspect repository applications.
+.TP
+.B install [--download-only] [--output-dir PATH] NAME ...
+Download, verify and optionally install single APK files.
+.TP
+.B upgrade [NAME ...]
+Upgrade installed applications recognized by the configured repositories.
+.TP
+.B list | doctor
+List Android applications or diagnose the backend.
+.TP
+.B remove PACKAGE-ID ...
+Uninstall after confirmation. Package IDs are Android package names.
+.SH GLOBAL OPTIONS
+Place global options before the command.
+.TP
+.B --mode auto|adb|root
+Prefer authorized ADB in auto mode; otherwise verify local Android host root.
+.TP
+.B --serial SERIAL
+Select an ADB device. Required when multiple devices are connected.
+.TP
+.B --json
+Emit newline-delimited JSON events.
+.TP
+.B --no-progress
+Disable intermediate download progress events.
+.TP
+.B --yes
+Skip uninstall confirmation, not Android authorization.
+.TP
+.B --version | --help
+Show version or help. Subcommands accept --help.
+.SH FILES
+.I $XDG_CONFIG_HOME/apkm/sources.json
+or ~/.config/apkm/sources.json contains repository URLs and trusted keyring paths.
+.PP
+.I $XDG_CACHE_HOME/apkm/apks/
+or ~/.cache/apkm/apks/ stores verified downloads.
+.SH SECURITY
+Repository signatures and APK hashes are verified before installation.
+Do not trust a public key solely because it arrived from the same untrusted site.
+APK update signing compatibility is enforced by Android.
+Linux root and PRoot simulated root do not imply Android host root access.
+.SH PROGRESS
+Download events contain actual byte counts. Android installation generally
+provides status and completion rather than continuous percentages.
+.SH EXIT STATUS
+0 success; 1 general or partial failure; 2 invalid usage/configuration;
+3 backend/authorization failure; 4 integrity/index failure; 5 Android operation failure;
+130 interrupted. Network or filesystem exceptions may return 1.
+.SH SEE ALSO
+.BR apkg (1),
+.BR adb (1)

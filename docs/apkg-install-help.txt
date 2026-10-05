@@ -1,0 +1,7 @@
+usage: apkg install [-h] names [names ...]
+
+positional arguments:
+  names       本地 APK 路径
+
+options:
+  -h, --help  show this help message and exit

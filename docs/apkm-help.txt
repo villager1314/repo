@@ -1,0 +1,27 @@
+usage: apkm [-h] [--version] [--mode {auto,adb,root}] [--serial SERIAL]
+            [--json] [--no-progress] [--yes]
+            {install,search,update,upgrade,source,info,list,remove,doctor} ...
+
+签名 APK 软件源客户端（Linux x86-64 / ARM64）
+
+positional arguments:
+  {install,search,update,upgrade,source,info,list,remove,doctor}
+    install             从软件源下载安装
+    search              搜索软件源
+    update              验证签名并刷新索引
+    upgrade             更新源中可识别的应用
+    source              管理软件源
+    info                查询源中的软件
+    list                列出设备上的应用
+    remove              卸载安卓应用
+    doctor              检查设备、权限及环境
+
+options:
+  -h, --help            show this help message and exit
+  --version             show program's version number and exit
+  --mode {auto,adb,root}
+                        后端；auto 优先 ADB，再检查安卓宿主 root
+  --serial SERIAL       ADB 设备序列号；多个设备时必须指定
+  --json                逐行 JSON 事件，供其他程序读取
+  --no-progress         只显示阶段日志
+  --yes                 跳过卸载确认，不绕过安卓授权
