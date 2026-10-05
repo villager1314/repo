@@ -11,8 +11,15 @@ Python 实现不包含本机二进制，Debian 使用 all 包，Arch 使用 any 
 3. 自带工作流只发布 `site/`。不要把签名私钥上传到仓库。
 4. 发布后入口为 https://villager1314.github.io/repo/ 。如果用户名或仓库名不同，替换本文和 site/index.html 中的 URL。
 
-现有主页不受影响。此项目没有自动连接 GitHub，也尚未在线发布。
+软件源已发布在 https://villager1314.github.io/repo/ ，由 GitHub Actions 更新。
 APK 源初始为空；不会默认转载第三方 APK。
+
+## Termux 安装
+
+已增加独立的 `termux/` 软件源，适配标准 com.termux 的 aarch64 / x86_64 环境。
+使用 Termux 的 Python、android-tools、gpgv，不使用 Debian 的安装路径。
+完整安装、无线 ADB 配对及 root 用法见 [Termux 使用说明](TERMUX.md)。
+实机兼容性尚待验证。
 
 ## Debian 安装
 
