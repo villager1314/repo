@@ -1,4 +1,5 @@
-usage: apkm install [-h] [--download-only] [--output-dir OUTPUT_DIR]
+usage: apkm install [-h] [--keep-apk] [--download-only]
+                    [--output-dir OUTPUT_DIR]
                     names [names ...]
 
 positional arguments:
@@ -6,6 +7,7 @@ positional arguments:
 
 options:
   -h, --help            show this help message and exit
+  --keep-apk            安装成功后保留下载的 APK；默认核对安装版本后删除
   --download-only       只下载并校验
   --output-dir OUTPUT_DIR
                         下载目录

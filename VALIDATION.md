@@ -27,3 +27,8 @@ Arch 包和数据库按照 ALPM 归档格式生成；没有使用 makepkg/repo-a
 ## 0.3.0 cache and Termux fixes
 
 21 tests pass, including offline search/info with legacy 0.2.0 cache; missing-cache guidance without a network request; actual apkg subprocess install using the cached catalog; selected-source update; mirror failure preserving configuration; verified APK reuse and corrupt APK redownload. Existing actual-signature and rollback tests still pass. Four repository checks and isolated APT loading pass; Termux archive and APT aarch64/x86_64 checks pass. No physical Android device installation test.
+
+## 0.3.1 automatic cleanup and source compatibility
+
+28 tests pass: delete downloaded APK only after successful installed-version confirmation; keep on install failure/version mismatch, download-only or --keep-apk; cleanup failure reported separately; actual apkg subprocess install confirms cleanup. Mixed ABI regression tests pass. Existing cached-index, signature, rollback, and repository checks pass.
+Actual remote indexes normalized: Izzy 1399 apps / 2957 variants; Guardian 16 / 38; microG 3 / 17; NewPipe 1 / 3. Diagnostic CMS signatures, entry manifests, and index-v2 hashes checked on all four sources; certificate fingerprints compared with official pages. microG current JSON/ASC pair failed GPG diagnostic validation; no key trusted or verification bypassed. Generic JAR production adapter remains unimplemented. No physical Android installation test.

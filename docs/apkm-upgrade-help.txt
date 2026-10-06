@@ -1,0 +1,8 @@
+usage: apkm upgrade [-h] [--keep-apk] [names ...]
+
+positional arguments:
+  names
+
+options:
+  -h, --help  show this help message and exit
+  --keep-apk  更新成功后保留 APK

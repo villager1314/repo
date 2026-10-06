@@ -38,3 +38,14 @@ apkm source add other https://example.org/fdroid/repo --type fdroid --keyring ./
 第三方源必须提供 `index-v1.json` 和 `.asc`；仅提供签名 JAR 的源暂不支持。不要仅凭下载地址信任第三方公钥。
 
 无 root 用已授权 ADB（Termux 可用无线调试）；安卓宿主有 root 可指定 `apkm --mode root install 包名`。安装进度沿用实际下载字节和 Android 返回状态。
+
+## 安装后自动清理（0.3.1）
+
+`apkm install` 和 `apkm upgrade` 在安装成功、核对已安装版本后自动删除对应下载 APK。失败或版本核对不通过时保留文件；`--download-only` 始终保留。需要留存成功安装的文件，可用：
+
+```sh
+apkm install --keep-apk org.fdroid.fdroid
+apkm upgrade --keep-apk
+```
+
+清理失败会单独报告，不把已成功安装的应用误报为失败。`apkg install 本地文件.apk` 的用户提供文件保持原样。

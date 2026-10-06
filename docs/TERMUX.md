@@ -211,3 +211,14 @@ python3 scripts/build_termux.py --private-key /私密路径/repository-private.a
 
 只发布 site/；私钥不能提交。Termux 包和 Debian 包名字相同，路径、依赖不同，
 只能安装适用于当前环境的那一份。暂不支持更改包名或 PREFIX 的 Termux 分支。
+
+## 安装后自动清理（0.3.1）
+
+`apkm install` 和 `apkm upgrade` 在安装成功、核对已安装版本后自动删除对应下载 APK。失败或版本核对不通过时保留文件；`--download-only` 始终保留。需要留存成功安装的文件，可用：
+
+```sh
+apkm install --keep-apk org.fdroid.fdroid
+apkm upgrade --keep-apk
+```
+
+清理失败会单独报告，不把已成功安装的应用误报为失败。`apkg install 本地文件.apk` 的用户提供文件保持原样。

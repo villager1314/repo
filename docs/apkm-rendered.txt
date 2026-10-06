@@ -38,28 +38,32 @@
               Search or inspect repository applications.
 
        [1minstall [--download-only] [--output-dir PATH] NAME ...[0m
-              Download, verify and optionally install single APK files.
+              Download, verify and optionally install single APK files.  After
+              successful  installation  and  installed-version   confirmation,
+              delete  the  downloaded  APK  by  default.  Failed  installs and
+              --download-only retain it.  Use --keep-apk with install  or  up‐
+              grade to retain successful downloads.
 
        [1mupgrade [NAME ...][0m
-              Upgrade installed  applications  recognized  by  the  configured
+              Upgrade  installed  applications  recognized  by  the configured
               repositories.
 
        [1mlist | doctor[0m
               List Android applications or diagnose the backend.
 
        [1mremove PACKAGE-ID ...[0m
-              Uninstall  after  confirmation.  Package IDs are Android package
+              Uninstall after confirmation. Package IDs  are  Android  package
               names.
 
 [1mGLOBAL OPTIONS[0m
        Place global options before the command.
 
        [1m--mode auto|adb|root[0m
-              Prefer authorized ADB in auto mode; otherwise verify  local  An‐
+              Prefer  authorized  ADB in auto mode; otherwise verify local An‐
               droid host root.
 
        [1m--serial SERIAL[0m
-              Select  an  ADB  device. Required when multiple devices are con‐
+              Select an ADB device. Required when multiple  devices  are  con‐
               nected.
 
        [1m--json [22mEmit newline-delimited JSON events.
@@ -73,17 +77,17 @@
               Show version or help. Subcommands accept --help.
 
 [1mFILES[0m
-       [4m$XDG_CONFIG_HOME/apkm/sources.json[24m or ~/.config/apkm/sources.json  con‐
+       [4m$XDG_CONFIG_HOME/apkm/sources.json[24m  or ~/.config/apkm/sources.json con‐
        tains repository URLs and trusted keyring paths.
 
        [4m$XDG_CACHE_HOME/apkm/apks/[24m or ~/.cache/apkm/apks/ stores verified down‐
        loads.
 
 [1mSECURITY[0m
-       Repository  signatures and APK hashes are verified before installation.
-       Do not trust a public key solely because it arrived from the  same  un‐
+       Repository signatures and APK hashes are verified before  installation.
+       Do  not  trust a public key solely because it arrived from the same un‐
        trusted site.  APK update signing compatibility is enforced by Android.
-       Linux  root and PRoot simulated root do not imply Android host root ac‐
+       Linux root and PRoot simulated root do not imply Android host root  ac‐
        cess.
 
 [1mPROGRESS[0m
@@ -92,11 +96,11 @@
 
 [1mEXIT STATUS[0m
        0 success; 1 general or partial failure; 2 invalid usage/configuration;
-       3 backend/authorization failure; 4 integrity/index failure;  5  Android
-       operation  failure;  130  interrupted. Network or filesystem exceptions
+       3  backend/authorization  failure; 4 integrity/index failure; 5 Android
+       operation failure; 130 interrupted. Network  or  filesystem  exceptions
        may return 1.
 
 [1mSEE ALSO[0m
        [1mapkg[22m(1), [1madb[22m(1)
 
-apkm 0.3.0                        2026-10-05                           [4mAPKM[24m(1)
+apkm 0.3.1                        2026-10-05                           [4mAPKM[24m(1)

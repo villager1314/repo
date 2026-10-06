@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""APKM/APKG 0.3.0: signed APK repository client and Android install backend."""
+"""APKM/APKG 0.3.1: signed APK repository client and Android install backend."""
 import argparse
 import hashlib
 import json
@@ -16,7 +16,7 @@ import urllib.parse
 import urllib.request
 import zipfile
 
-VERSION = '0.3.0'
+VERSION = '0.3.1'
 BASE_URL = 'https://villager1314.github.io/repo'
 CONFIG = Path(os.environ.get('XDG_CONFIG_HOME', str(Path.home()/'.config'))) / 'apkm'
 CACHE = Path(os.environ.get('XDG_CACHE_HOME', str(Path.home()/'.cache'))) / 'apkm'
@@ -153,7 +153,7 @@ def normalize_fdroid(data):
                         description=app.get('name', app.get('localized', {}).get('en-US', {}).get('name', package)) + ' — ' + app.get('summary', app.get('localized', {}).get('en-US', {}).get('summary', '')),
                         version_code=int(v['versionCode']), version_name=v.get('versionName', ''),
                         min_sdk=int(v.get('minSdkVersion', v.get('sdkVersion', 1))), max_sdk=int(v.get('maxSdkVersion', 0)),
-                        abis=v.get('nativecode') or ['any'], sha256=v['hash'],
+                        abis=[a for a in (v.get('nativecode') or ['any']) if a in ['any','arm64-v8a','armeabi-v7a','x86','x86_64']], sha256=v['hash'],
                         size=v['size'], url=v['apkName'], features=v.get('features', []))
             if item['abis'] and all(a in ['any','arm64-v8a','armeabi-v7a','x86','x86_64'] for a in item['abis']):
                 validate_index(dict(schema_version=1, packages=[item]))
@@ -369,6 +369,16 @@ def download(p,args,out):
         Path(temp).unlink(missing_ok=True)
 
 
+def cleanup_apk(path, out):
+    """Called only for repository downloads after successful version confirmation."""
+    try:
+        path.unlink(missing_ok=True)
+        out.event('清理', '已删除安装成功的 APK', path=str(path))
+    except OSError as e:
+        # The Android install succeeded; report cleanup separately without lying about it.
+        out.event('清理失败', f'应用已安装，APK 未能删除：{e}', path=str(path))
+
+
 def parser(program):
     apkg=program=='apkg'
     p=argparse.ArgumentParser(prog=program,description='安卓本地 APK 安装后端' if apkg else '签名 APK 软件源客户端（Linux x86-64 / ARM64）')
@@ -382,11 +392,12 @@ def parser(program):
     ins=s.add_parser('install',help='安装本地 APK' if apkg else '从软件源下载安装')
     ins.add_argument('names',nargs='+',help='本地 APK 路径' if apkg else '软件名')
     if not apkg:
+        ins.add_argument('--keep-apk',action='store_true',help='安装成功后保留下载的 APK；默认核对安装版本后删除')
         ins.add_argument('--download-only',action='store_true',help='只下载并校验')
         ins.add_argument('--output-dir',help='下载目录')
         search=s.add_parser('search',help='搜索软件源'); search.add_argument('keyword')
         update=s.add_parser('update',help='下载、验证签名并刷新本地索引'); update.add_argument('names',nargs='*',help='指定源名；省略则刷新所有源')
-        upgrade=s.add_parser('upgrade',help='更新源中可识别的应用'); upgrade.add_argument('names',nargs='*'); upgrade.set_defaults(download_only=False,output_dir=None)
+        upgrade=s.add_parser('upgrade',help='更新源中可识别的应用'); upgrade.add_argument('names',nargs='*'); upgrade.add_argument('--keep-apk',action='store_true',help='更新成功后保留 APK'); upgrade.set_defaults(download_only=False,output_dir=None)
         source=s.add_parser('source',help='管理软件源'); sub=source.add_subparsers(dest='source_command',required=True)
         sub.add_parser('list')
         add=sub.add_parser('add'); add.add_argument('name'); add.add_argument('url'); add.add_argument('--type',choices=['apkm','fdroid'],default='apkm',help='源索引格式'); add.add_argument('--keyring',help='事先可信的 GPG 二进制公钥环路径')
@@ -500,6 +511,8 @@ def main(argv=None,program=None):
                     actual=backend.version(p['package_id'])
                     if actual!=p['version_code']:raise Failure('安装后包名/版本与签名源声明不符',5)
                     out.event('结果',f'{name} 安装成功，versionCode={actual}')
+                    if not args.keep_apk:
+                        cleanup_apk(path,out)
             return 0
         backend=Backend(args,out)
         if args.command=='doctor':

@@ -1,4 +1,4 @@
-.TH APKM 1 "2026-10-05" "apkm 0.3.0" "User Commands"
+.TH APKM 1 "2026-10-05" "apkm 0.3.1" "User Commands"
 .SH NAME
 apkm \- signed Android APK repository client
 .SH SYNOPSIS
@@ -34,6 +34,9 @@ Search or inspect repository applications.
 .TP
 .B install [--download-only] [--output-dir PATH] NAME ...
 Download, verify and optionally install single APK files.
+After successful installation and installed-version confirmation, delete
+the downloaded APK by default. Failed installs and --download-only retain it.
+Use --keep-apk with install or upgrade to retain successful downloads.
 .TP
 .B upgrade [NAME ...]
 Upgrade installed applications recognized by the configured repositories.

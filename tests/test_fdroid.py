@@ -20,6 +20,12 @@ class FDroidTests(unittest.TestCase):
     with patch.object(m,'CONFIG',root),patch.object(m,'fetch',side_effect=[json.dumps(data).encode(),b'sig']),patch.object(m,'run',return_value=subprocess.CompletedProcess([],code,'','')):
      with self.assertRaises(m.Failure):m.refresh('f',dict(type='fdroid',url='https://example.org',keyring=str(key)),m.Output(m.parser('apkm').parse_args(['update'])))
     self.assertEqual(target.read_text(),'{"revision":100}')
+ def test_mixed_abi_metadata_preserves_supported_variants(self):
+  data=self.fixture();data['packages']['org.example.app'][1]['nativecode']=['arm64-v8a','armeabi','mips','x86_64/darwin']
+  p=m.normalize_fdroid(data)['packages'][0]
+  self.assertEqual(p['version_code'],2);self.assertEqual(p['abis'],['arm64-v8a'])
+  data['packages']['org.example.app'][1]['nativecode']=['mips']
+  self.assertEqual(m.normalize_fdroid(data)['packages'][0]['version_code'],1)
  def test_third_party_requires_explicit_key(self):
   with tempfile.TemporaryDirectory() as d,patch.object(m,'CONFIG',Path(d)):
    self.assertEqual(m.main(['source','add','f','https://example.org/repo','--type','fdroid']),2)
