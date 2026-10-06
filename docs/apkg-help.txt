@@ -2,22 +2,23 @@ usage: apkg [-h] [--version] [--mode {auto,adb,root}] [--serial SERIAL]
             [--json] [--no-progress] [--yes]
             {install,info,list,remove,doctor} ...
 
-安卓本地 APK 安装后端
+Local Android APK installation backend
 
 positional arguments:
   {install,info,list,remove,doctor}
-    install             安装本地 APK
-    info                查询安卓应用
-    list                列出设备上的应用
-    remove              卸载安卓应用
-    doctor              检查设备、权限及环境
+    install             Install local APKs
+    info                Inspect an installed Android application
+    list                List applications on the device
+    remove              Uninstall Android applications and their data
+    doctor              Check device, permissions and environment
 
 options:
   -h, --help            show this help message and exit
   --version             show program's version number and exit
   --mode {auto,adb,root}
-                        后端；auto 优先 ADB，再检查安卓宿主 root
-  --serial SERIAL       ADB 设备序列号；多个设备时必须指定
-  --json                逐行 JSON 事件，供其他程序读取
-  --no-progress         只显示阶段日志
-  --yes                 跳过卸载确认，不绕过安卓授权
+                        Backend; auto prefers ADB, then checks Android host
+                        root
+  --serial SERIAL       ADB serial; required with multiple devices
+  --json                Emit newline-delimited JSON events
+  --no-progress         Show stage messages only
+  --yes                 Skip uninstall confirmation, not Android authorization

@@ -222,3 +222,15 @@ apkm upgrade --keep-apk
 ```
 
 清理失败会单独报告，不把已成功安装的应用误报为失败。`apkg install 本地文件.apk` 的用户提供文件保持原样。
+
+## 卸载与英文帮助（0.3.3）
+
+```sh
+apkm --yes remove com.example.app
+LANG=C apkm --help
+LANG=C apkg remove --help
+man apkm
+man apkg
+```
+
+卸载使用安卓包名，通常删除应用数据，不需要更新索引；交互模式不加 --yes 会询问确认。英文 man 已包含卸载说明。help 在 zh 语言环境显示中文，其余显示英文，运行日志仍主要为中文。

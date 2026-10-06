@@ -5,4 +5,4 @@ positional arguments:
 
 options:
   -h, --help  show this help message and exit
-  --keep-apk  更新成功后保留 APK
+  --keep-apk  Keep APKs after successful upgrades

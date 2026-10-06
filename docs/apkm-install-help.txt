@@ -3,11 +3,12 @@ usage: apkm install [-h] [--keep-apk] [--download-only]
                     names [names ...]
 
 positional arguments:
-  names                 软件名
+  names                 Application names
 
 options:
   -h, --help            show this help message and exit
-  --keep-apk            安装成功后保留下载的 APK；默认核对安装版本后删除
-  --download-only       只下载并校验
+  --keep-apk            Keep APKs after successful installation; otherwise
+                        delete after version confirmation
+  --download-only       Download and verify only
   --output-dir OUTPUT_DIR
-                        下载目录
+                        Download directory

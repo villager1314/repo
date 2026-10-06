@@ -16,7 +16,7 @@ import urllib.parse
 import urllib.request
 import zipfile
 
-VERSION = '0.3.2'
+VERSION = '0.3.3'
 BASE_URL = 'https://villager1314.github.io/repo'
 CONFIG = Path(os.environ.get('XDG_CONFIG_HOME', str(Path.home()/'.config'))) / 'apkm'
 CACHE = Path(os.environ.get('XDG_CACHE_HOME', str(Path.home()/'.cache'))) / 'apkm'
@@ -311,13 +311,18 @@ class Backend:
     def remove(self, package):
         if not re.fullmatch(r'[A-Za-z][A-Za-z0-9_]*(?:\.[A-Za-z][A-Za-z0-9_]*)+',package):
             raise Failure('安卓包名不合法',2)
+        if package not in self.installed():
+            self.out.event('跳过',f'{package}: not installed',package_id=package)
+            return
+        self.out.event('卸载',f'{package}: uninstalling',package_id=package)
         if self.mode=='adb':
             p=run(self.prefix+['uninstall',package],check=False,timeout=120)
         else:
             p=run(self.prefix+[shlex.join(['/system/bin/pm','uninstall',package])],check=False,timeout=120)
         if p.returncode or p.stdout.strip()!='Success':
             raise Failure((p.stderr+'\n'+p.stdout).strip(),5)
-        self.out.event('卸载',f'{package}：Success')
+        if package in self.installed():raise Failure(f'{package}: still installed after uninstall',5)
+        self.out.event('卸载',f'{package}：Success',package_id=package)
 
 
 def check_apk(path):
@@ -381,41 +386,44 @@ def cleanup_apk(path, out):
 
 def parser(program):
     apkg=program=='apkg'
-    p=argparse.ArgumentParser(prog=program,epilog=None if apkg else 'This APKM has Niu Lai Powers.',description='安卓本地 APK 安装后端' if apkg else '签名 APK 软件源客户端（Linux x86-64 / ARM64）')
+    language=os.environ.get('LC_ALL') or os.environ.get('LC_MESSAGES') or os.environ.get('LANG','en')
+    def tr(zh,en): return zh if language.lower().startswith('zh') else en
+    p=argparse.ArgumentParser(prog=program,epilog=None if apkg else 'This APKM has Niu Lai Powers.',description=tr('安卓本地 APK 安装后端','Local Android APK installation backend') if apkg else tr('签名 APK 软件源客户端（Linux x86-64 / ARM64）','Signed APK repository client (Linux x86-64 / ARM64)'))
     p.add_argument('--version',action='version',version=f'{program} {VERSION}')
-    p.add_argument('--mode',choices=['auto','adb','root'],default='auto',help='后端；auto 优先 ADB，再检查安卓宿主 root')
-    p.add_argument('--serial',help='ADB 设备序列号；多个设备时必须指定')
-    p.add_argument('--json',action='store_true',help='逐行 JSON 事件，供其他程序读取')
-    p.add_argument('--no-progress',action='store_true',help='只显示阶段日志')
-    p.add_argument('--yes',action='store_true',help='跳过卸载确认，不绕过安卓授权')
+    p.add_argument('--mode',choices=['auto','adb','root'],default='auto',help=tr('后端；auto 优先 ADB，再检查安卓宿主 root','Backend; auto prefers ADB, then checks Android host root'))
+    p.add_argument('--serial',help=tr('ADB 设备序列号；多个设备时必须指定','ADB serial; required with multiple devices'))
+    p.add_argument('--json',action='store_true',help=tr('逐行 JSON 事件，供其他程序读取','Emit newline-delimited JSON events'))
+    p.add_argument('--no-progress',action='store_true',help=tr('只显示阶段日志','Show stage messages only'))
+    p.add_argument('--yes',action='store_true',help=tr('跳过卸载确认，不绕过安卓授权','Skip uninstall confirmation, not Android authorization'))
     s=p.add_subparsers(dest='command',required=True)
-    ins=s.add_parser('install',help='安装本地 APK' if apkg else '从软件源下载安装')
-    ins.add_argument('names',nargs='+',help='本地 APK 路径' if apkg else '软件名')
+    ins=s.add_parser('install',help=tr('安装本地 APK','Install local APKs') if apkg else tr('从软件源下载安装','Download and install repository APKs'))
+    ins.add_argument('names',nargs='+',help=tr('本地 APK 路径','Local APK paths') if apkg else tr('软件名','Application names'))
     if not apkg:
-        ins.add_argument('--keep-apk',action='store_true',help='安装成功后保留下载的 APK；默认核对安装版本后删除')
-        ins.add_argument('--download-only',action='store_true',help='只下载并校验')
-        ins.add_argument('--output-dir',help='下载目录')
-        search=s.add_parser('search',help='搜索软件源'); search.add_argument('keyword')
-        update=s.add_parser('update',help='下载、验证签名并刷新本地索引'); update.add_argument('names',nargs='*',help='指定源名；省略则刷新所有源')
-        upgrade=s.add_parser('upgrade',help='更新源中可识别的应用'); upgrade.add_argument('names',nargs='*'); upgrade.add_argument('--keep-apk',action='store_true',help='更新成功后保留 APK'); upgrade.set_defaults(download_only=False,output_dir=None)
-        source=s.add_parser('source',help='管理软件源'); sub=source.add_subparsers(dest='source_command',required=True)
+        ins.add_argument('--keep-apk',action='store_true',help=tr('安装成功后保留下载的 APK；默认核对安装版本后删除','Keep APKs after successful installation; otherwise delete after version confirmation'))
+        ins.add_argument('--download-only',action='store_true',help=tr('只下载并校验','Download and verify only'))
+        ins.add_argument('--output-dir',help=tr('下载目录','Download directory'))
+        search=s.add_parser('search',help=tr('搜索软件源','Search cached repositories')); search.add_argument('keyword')
+        update=s.add_parser('update',help=tr('下载、验证签名并刷新本地索引','Download, verify and refresh local indexes')); update.add_argument('names',nargs='*',help=tr('指定源名；省略则刷新所有源','Source names; omit to update all sources'))
+        upgrade=s.add_parser('upgrade',help=tr('更新源中可识别的应用','Upgrade installed applications found in repositories')); upgrade.add_argument('names',nargs='*'); upgrade.add_argument('--keep-apk',action='store_true',help=tr('更新成功后保留 APK','Keep APKs after successful upgrades')); upgrade.set_defaults(download_only=False,output_dir=None)
+        source=s.add_parser('source',help=tr('管理软件源','Manage repositories')); sub=source.add_subparsers(dest='source_command',required=True)
         sub.add_parser('list')
-        add=sub.add_parser('add'); add.add_argument('name'); add.add_argument('url'); add.add_argument('--type',choices=['apkm','fdroid'],default='apkm',help='源索引格式'); add.add_argument('--keyring',help='事先可信的 GPG 二进制公钥环路径')
-        change=sub.add_parser('set-url',help='更换镜像并验证索引，保留可信公钥及回退检查'); change.add_argument('name'); change.add_argument('url')
+        add=sub.add_parser('add'); add.add_argument('name'); add.add_argument('url'); add.add_argument('--type',choices=['apkm','fdroid'],default='apkm',help=tr('源索引格式','Repository index format')); add.add_argument('--keyring',help=tr('事先可信的 GPG 二进制公钥环路径','Previously trusted binary GPG keyring path'))
+        change=sub.add_parser('set-url',help=tr('更换镜像并验证索引，保留可信公钥及回退检查','Verify and switch mirrors, preserving trust and rollback checks')); change.add_argument('name'); change.add_argument('url')
         remove=sub.add_parser('remove');remove.add_argument('name')
-    info=s.add_parser('info',help='查询安卓应用' if apkg else '查询源中的软件');info.add_argument('name')
-    s.add_parser('list',help='列出设备上的应用')
-    rem=s.add_parser('remove',help='卸载安卓应用'); rem.add_argument('names',nargs='+',help='安卓包名')
-    s.add_parser('doctor',help='检查设备、权限及环境')
+    info=s.add_parser('info',help=tr('查询安卓应用','Inspect an installed Android application') if apkg else tr('查询源中的软件','Inspect a repository application'));info.add_argument('name')
+    s.add_parser('list',help=tr('列出设备上的应用','List applications on the device'))
+    rem=s.add_parser('remove',help=tr('卸载安卓应用','Uninstall Android applications and their data')); rem.add_argument('names',nargs='+',help=tr('安卓包名','Android package IDs'))
+    s.add_parser('doctor',help=tr('检查设备、权限及环境','Check device, permissions and environment'))
     return p
 
 
-def invoke_apkg(path,args,out):
+def invoke_apkg(path,args,out,operation="install"):
     executable=shutil.which('apkg')
     cmd=[executable] if executable else [sys.executable,str(Path(__file__).resolve()),'--as-apkg']
     cmd+=['--mode',args.mode,'--json']
     if args.serial:cmd+=['--serial',args.serial]
-    cmd+=['install',str(path)]
+    if operation=='remove': cmd+=['--yes','remove']+list(path)
+    else: cmd+=['install',str(path)]
     # Read events live; do not buffer all installation output until completion.
     proc=subprocess.Popen(cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True)
     for line in proc.stdout:
@@ -423,11 +431,11 @@ def invoke_apkg(path,args,out):
             e=json.loads(line)
             stage=e.pop('stage');message=e.pop('message');out.event(stage,message,**e)
         except (ValueError,KeyError):
-            out.event('安装',line.strip())
+            out.event('卸载' if operation=='remove' else '安装',line.strip())
     stderr=proc.stderr.read(); code=proc.wait()
     proc.stdout.close();proc.stderr.close()
     if code:
-        raise Failure(stderr.strip() or 'apkg 安装失败',code)
+        raise Failure(stderr.strip() or f'apkg {operation} failed',code)
 
 
 def main(argv=None,program=None):
@@ -514,6 +522,16 @@ def main(argv=None,program=None):
                     if not args.keep_apk:
                         cleanup_apk(path,out)
             return 0
+        if args.command=='remove':
+            args.names=list(dict.fromkeys(args.names))
+            for name in args.names:
+                if not re.fullmatch(r'[A-Za-z][A-Za-z0-9_]*(?:\.[A-Za-z][A-Za-z0-9_]*)+',name):raise Failure('Invalid Android package ID: '+name,2)
+            if not args.yes:
+                if args.json or not sys.stdin.isatty():raise Failure('Uninstall requires --yes or interactive confirmation',2)
+                if input('Uninstall apps and their data: '+', '.join(args.names)+'? Type yes: ')!='yes':raise Failure('Cancelled',1)
+            if program=='apkm':
+                invoke_apkg(args.names,args,out,operation='remove')
+                return 0
         backend=Backend(args,out)
         if args.command=='doctor':
             sdk,abis=backend.device_info();out.event('检查',f'API {sdk}，ABI {", ".join(abis)}',sdk=sdk,abis=abis)
@@ -527,9 +545,6 @@ def main(argv=None,program=None):
             for name in args.names:
                 path=Path(name).expanduser();check_apk(path);backend.install(path)
         elif args.command=='remove':
-            if not args.yes:
-                if args.json or not sys.stdin.isatty():raise Failure('卸载需要 --yes 或交互确认',2)
-                if input('确认卸载 '+', '.join(args.names)+'？输入 yes：')!='yes':raise Failure('已取消',1)
             for name in args.names:backend.remove(name)
         return 0
     except Failure as e:

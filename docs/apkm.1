@@ -1,4 +1,4 @@
-.TH APKM 1 "2026-10-05" "apkm 0.3.1" "User Commands"
+.TH APKM 1 "2026-10-06" "apkm 0.3.3" "User Commands"
 .SH NAME
 apkm \- signed Android APK repository client
 .SH SYNOPSIS
@@ -87,3 +87,15 @@ provides status and completion rather than continuous percentages.
 .SH SEE ALSO
 .BR apkg (1),
 .BR adb (1)
+
+.SH UNINSTALL
+Use Android package IDs, even when the repository uses a different application name.
+No repository index or network access is required. APKM delegates removal to APKG.
+All IDs are validated before confirmation or device access.
+Duplicate IDs are removed once; absent applications are skipped.
+Successful removal requires Android Success and a subsequent absence check.
+Removal normally deletes application data. Noninteractive and JSON use require --yes.
+Stop on the first failure; applications already removed remain removed.
+.SH LANGUAGE
+This manual is in English. Help uses Chinese for zh locales and English otherwise.
+Use LANG=C apkm --help or LANG=C apkg --help to request English help.

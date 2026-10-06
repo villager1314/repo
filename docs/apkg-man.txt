@@ -1,0 +1,63 @@
+[4mAPKG[24m(1)                          User Commands                         [4mAPKG[24m(1)
+
+[1mNAME[0m
+       apkg - local APK installation backend
+
+[1mSYNOPSIS[0m
+       [1mapkg [22m[global-options] command [arguments]
+
+[1mCOMMANDS[0m
+       [1minstall FILE.apk ...[0m
+              Install or update local single APKs. Calls adb install -r or An‐
+              droid  host  pm  install  -r  -S with APK bytes streamed through
+              standard input.
+
+       [1mlist   [22mList applications on the selected Android device.
+
+       [1minfo PACKAGE-ID[0m
+              Show the installed versionCode.
+
+       [1mremove PACKAGE-ID ...[0m
+              Uninstall after confirmation; application data may be removed by
+              Android.
+
+       [1mdoctor [22mCheck backend selection and target Android SDK/ABI.
+
+[1mGLOBAL OPTIONS[0m
+       --mode auto|adb|root, --serial SERIAL,  --json,  --no-progress,  --yes,
+       --version and --help. Options precede the command.
+
+[1mPERMISSIONS[0m
+       ADB  requires  device  authorization,  not Android root.  Root mode re‐
+       quires Android host su and package-manager access; a Linux uid of  zero
+       is insufficient. No backend bypasses Android signature checks.
+
+[1mLIMITATIONS[0m
+       Supports single APK files only. No split APK/APKS/APKM containers.  Lo‐
+       cal  validation checks ZIP format and AndroidManifest.xml presence; An‐
+       droid performs the installation and signature checks.
+
+[1mEXIT STATUS[0m
+       See apkm(1). A successful installation requires Android to report  Suc‐
+       cess.
+
+[1mSEE ALSO[0m
+       [1mapkm[22m(1), [1madb[22m(1)
+
+
+[1mUNINSTALL[0m
+       Use  Android package IDs, even when the repository uses a different ap‐
+       plication name.  No repository index or  network  access  is  required.
+       APKM delegates removal to APKG.  All IDs are validated before confirma‐
+       tion or device access.  Duplicate IDs are removed once; absent applica‐
+       tions  are  skipped.  Successful removal requires Android Success and a
+       subsequent absence check.  Removal normally deletes  application  data.
+       Noninteractive  and JSON use require --yes.  Stop on the first failure;
+       applications already removed remain removed.
+
+[1mLANGUAGE[0m
+       This manual is in English. Help uses Chinese for zh locales and English
+       otherwise.  Use LANG=C apkm --help or LANG=C  apkg  --help  to  request
+       English help.
+
+apkg 0.3.3                        2026-10-06                           [4mAPKG[24m(1)

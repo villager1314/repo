@@ -1,7 +1,7 @@
-usage: apkg install [-h] names [names ...]
+usage: apkg remove [-h] names [names ...]
 
 positional arguments:
-  names       Local APK paths
+  names       Android package IDs
 
 options:
   -h, --help  show this help message and exit

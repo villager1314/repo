@@ -32,3 +32,7 @@ Arch 包和数据库按照 ALPM 归档格式生成；没有使用 makepkg/repo-a
 
 28 tests pass: delete downloaded APK only after successful installed-version confirmation; keep on install failure/version mismatch, download-only or --keep-apk; cleanup failure reported separately; actual apkg subprocess install confirms cleanup. Mixed ABI regression tests pass. Existing cached-index, signature, rollback, and repository checks pass.
 Actual remote indexes normalized: Izzy 1399 apps / 2957 variants; Guardian 16 / 38; microG 3 / 17; NewPipe 1 / 3. Diagnostic CMS signatures, entry manifests, and index-v2 hashes checked on all four sources; certificate fingerprints compared with official pages. microG current JSON/ASC pair failed GPG diagnostic validation; no key trusted or verification bypassed. Generic JAR production adapter remains unimplemented. No physical Android installation test.
+
+## 0.3.3 removal and English help
+
+35 tests pass, including offline removal delegation, batch validation before mutation, confirmation before backend access, duplicate IDs, absent-app skip, post-uninstall absence checks, and locale-selected help. English man pages rendered with groff; four repository signatures and isolated APT checks pass. Physical Android uninstall remains untested.
