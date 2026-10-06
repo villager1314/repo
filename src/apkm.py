@@ -16,7 +16,7 @@ import urllib.parse
 import urllib.request
 import zipfile
 
-VERSION = '0.3.1'
+VERSION = '0.3.2'
 BASE_URL = 'https://villager1314.github.io/repo'
 CONFIG = Path(os.environ.get('XDG_CONFIG_HOME', str(Path.home()/'.config'))) / 'apkm'
 CACHE = Path(os.environ.get('XDG_CACHE_HOME', str(Path.home()/'.cache'))) / 'apkm'
@@ -381,7 +381,7 @@ def cleanup_apk(path, out):
 
 def parser(program):
     apkg=program=='apkg'
-    p=argparse.ArgumentParser(prog=program,description='安卓本地 APK 安装后端' if apkg else '签名 APK 软件源客户端（Linux x86-64 / ARM64）')
+    p=argparse.ArgumentParser(prog=program,epilog=None if apkg else 'This APKM has Niu Lai Powers.',description='安卓本地 APK 安装后端' if apkg else '签名 APK 软件源客户端（Linux x86-64 / ARM64）')
     p.add_argument('--version',action='version',version=f'{program} {VERSION}')
     p.add_argument('--mode',choices=['auto','adb','root'],default='auto',help='后端；auto 优先 ADB，再检查安卓宿主 root')
     p.add_argument('--serial',help='ADB 设备序列号；多个设备时必须指定')

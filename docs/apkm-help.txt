@@ -25,3 +25,5 @@ options:
   --json                逐行 JSON 事件，供其他程序读取
   --no-progress         只显示阶段日志
   --yes                 跳过卸载确认，不绕过安卓授权
+
+This APKM has Niu Lai Powers.

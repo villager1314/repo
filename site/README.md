@@ -1,4 +1,4 @@
-# APKM / APKG 0.3.1
+# APKM / APKG 0.3.2
 
 从签名 APK 软件源下载应用，通过 ADB 或安卓宿主 root 安装。
 提供 Debian（amd64 / arm64）及 Arch（x86_64 / aarch64）四个软件源。
@@ -47,7 +47,7 @@ sudo apt update
 sudo apt install --no-install-recommends apkm
 ```
 
-也可以先安装随附的本地 deb：`sudo apt install ./apkm_0.3.1-1_all.deb`。
+也可以先安装随附的本地 deb：`sudo apt install ./apkm_0.3.2-1_all.deb`。
 包包含 apkm、apkg、两份 man 手册和 APK 源公钥。
 
 ## Arch / Arch Linux ARM 安装
@@ -173,3 +173,5 @@ apkm install com.termux
 0.3.0：搜索、查询与安装使用本地已验证索引；只在添加源、切换镜像或 `apkm update [源名]` 时下载索引。兼容 0.2.0 缓存；相同 APK 校验后复用。`source set-url` 可原地更换镜像。
 
 0.3.1：安装成功并确认版本后默认删除源下载 APK；`--keep-apk` 可保留，失败及仅下载保留。修复 F-Droid APK 混合 ABI 列表导致整项被排除的问题。[其他 APK 源适配检查](docs/APK-SOURCES.md)。
+
+0.3.2：`apkm --help` 末尾增加 `This APKM has Niu Lai Powers.`。
