@@ -1,9 +1,50 @@
-<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>APKM 软件源</title><style>body{font:16px system-ui;max-width:800px;margin:48px auto;padding:0 24px;line-height:1.7}a{color:#1565c0}pre{background:#f3f5f7;padding:16px;overflow:auto}li{margin:12px 0}</style><h1>APKM / APKG 软件源</h1><p>Linux APK 下载与安卓安装工具 · 0.3.1</p><ul><li><a href="debian/amd64/Packages">Debian x86-64</a></li><li><a href="debian/arm64/Packages">Debian ARM64</a></li><li><a href="arch/x86_64/apkm.db">Arch x86-64</a></li><li><a href="arch/aarch64/apkm.db">Arch ARM64</a></li><li><a href="TERMUX.md">Termux 安装说明</a> · <a href="termux/Packages">Termux 软件源</a></li><li><a href="android/index.json">APK 软件源索引</a>（初始为空）</li><li><a href="keys/apkm.gpg">签名公钥</a> · <a href="keys/FINGERPRINT.txt">指纹</a></li><li><a href="README.md">安装和维护说明</a></li></ul><pre>apkm source add personal https://villager1314.github.io/repo/android/ --keyring /usr/share/apkm-keyring.gpg
-apkm install 软件名
-apkg install ./软件.apk</pre><p>下载提供真实进度；安装显示安卓返回状态。ADB 需要设备授权，root 模式需要安卓宿主权限。</p></html>
-
-<p>已支持 F-Droid 官方源：<code>apkm source add fdroid https://f-droid.org/repo --type fdroid</code>。<a href="https://github.com/villager1314/repo/blob/main/docs/FDROID.md">F-Droid 使用说明</a></p>
-
-<p>0.3.0：搜索与安装复用本地已验证索引，仅 <code>apkm update</code> 刷新。Termux 精简安装：<code>apt install --no-install-recommends apkm</code>。</p>
-
-<p>0.3.1：安装成功并确认版本后自动删除 APK，<code>--keep-apk</code> 可保留。<a href="https://github.com/villager1314/repo/blob/main/docs/APK-SOURCES.md">其他 APK 源适配检查</a></p>
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>APKM / APKG — Android APK manager</title>
+<style>
+:root{color-scheme:light dark}body{font:16px system-ui;max-width:960px;margin:40px auto;padding:0 24px;line-height:1.7}a{color:#3785db}nav,.links{display:flex;gap:16px;flex-wrap:wrap}pre{background:#8881;padding:16px;overflow:auto;border:1px solid #8884;border-radius:8px}code{overflow-wrap:anywhere}table{border-collapse:collapse;width:100%}th,td{text-align:left;border-bottom:1px solid #8884;padding:10px}section{margin-top:32px}small{color:#888}button{font:inherit;padding:6px 12px;cursor:pointer}h1{line-height:1.2}footer{margin-top:40px;border-top:1px solid #8884;padding-top:16px}
+</style>
+</head>
+<body>
+<header><nav aria-label="Language"><button type="button" onclick="setLanguage('zh')">简体中文</button><button type="button" onclick="setLanguage('en')">English</button></nav><h1>APKM / APKG</h1><p><strong>v0.3.3</strong> · Android APK manager</p>
+<p data-zh="从可信软件源下载 APK，通过已授权 ADB 或安卓宿主 root 安装。APKM 是源客户端，APKG 是安装后端；与 .apkm 容器格式无关，也不管理 Arch 的 pkg 软件包。" data-en="Download APKs from trusted repositories and install through authorized ADB or Android host root. APKM is the frontend; APKG is the backend. This project is unrelated to .apkm containers and does not manage Arch pkg archives.">从可信软件源下载 APK，通过已授权 ADB 或安卓宿主 root 安装。APKM 是源客户端，APKG 是安装后端；与 .apkm 容器格式无关，也不管理 Arch 的 pkg 软件包。</p>
+<div class="links"><a href="https://github.com/villager1314/repo">GitHub</a><a href="https://github.com/villager1314/repo/releases/tag/v0.3.3">Release v0.3.3</a><a href="https://github.com/villager1314/repo/actions/workflows/ci.yml">CI</a><a href="https://github.com/villager1314/repo/blob/main/LICENSE">MIT License</a></div>
+</header>
+<nav aria-label="Sections"><a href="#repositories" data-zh="软件源" data-en="Repositories">软件源</a><a href="#usage" data-zh="使用" data-en="Usage">使用</a><a href="#trust" data-zh="签名公钥" data-en="Signing key">签名公钥</a><a href="#docs" data-zh="文档" data-en="Documentation">文档</a></nav>
+<section id="repositories"><h2 data-zh="软件源与安装入口" data-en="Repositories and installation">软件源与安装入口</h2>
+<table><thead><tr><th data-zh="系统" data-en="Environment">系统</th><th data-zh="架构" data-en="Architecture">架构</th><th data-zh="索引 / 说明" data-en="Index / guide">索引 / 说明</th></tr></thead><tbody>
+<tr><td>Debian / Ubuntu</td><td>amd64 · arm64</td><td><a href="debian/amd64/Packages">amd64</a> · <a href="debian/arm64/Packages">arm64</a> · <a href="https://github.com/villager1314/repo#install">Install</a></td></tr>
+<tr><td>Arch / Arch Linux ARM</td><td>x86_64 · aarch64</td><td><a href="arch/x86_64/apkm.db">x86_64</a> · <a href="arch/aarch64/apkm.db">aarch64</a> · <a href="https://github.com/villager1314/repo#install">Install</a></td></tr>
+<tr><td>Termux</td><td>aarch64 · x86_64</td><td><a href="termux/Packages">Packages</a> · <a href="https://github.com/villager1314/repo/blob/main/docs/TERMUX.md">Termux guide (中文)</a></td></tr>
+<tr><td data-zh="自建 APK 源" data-en="Self-hosted APK repository">自建 APK 源</td><td>Android APK</td><td><a href="android/index.json">index.json</a> <span data-zh="（目前为空）" data-en="(currently empty)">（目前为空）</span></td></tr>
+</tbody></table>
+<p data-zh="Debian 与 Termux 软件包的路径和依赖不同，请按环境选择。真实安卓安装/卸载及原生 Arch、ARM64、Termux 兼容性仍需实机验证。" data-en="Debian and Termux packages have different paths and dependencies. Physical Android installation/removal and native Arch, ARM64 and Termux compatibility still require device validation.">Debian 与 Termux 软件包的路径和依赖不同，请按环境选择。真实安卓安装/卸载及原生 Arch、ARM64、Termux 兼容性仍需实机验证。</p></section>
+<section id="usage"><h2 data-zh="使用与当前功能" data-en="Usage and current behavior">使用与当前功能</h2>
+<pre>apkm source add fdroid https://f-droid.org/repo --type fdroid
+apkm search termux
+apkm info com.termux
+apkm install com.termux
+apkm update fdroid
+apkm remove com.example.app
+LANG=C apkm --help
+man apkm</pre>
+<p data-zh="搜索、详情和安装读取已验证的本地索引；仅添加源、切换镜像或 update 时下载索引。安装成功并确认版本后自动删除 APK；--keep-apk 可保留。" data-en="Search, info and install read verified local indexes. Indexes download on source addition, mirror switching or update. Successful installation and version confirmation delete the APK; --keep-apk retains it.">搜索、详情和安装读取已验证的本地索引；仅添加源、切换镜像或 update 时下载索引。安装成功并确认版本后自动删除 APK；--keep-apk 可保留。</p>
+<p data-zh="0.3.3：apkm remove 委托 apkg，校验包名、去重、跳过未安装应用并确认卸载结果。卸载通常删除应用数据，需要交互确认或命令前的 --yes。help 按语言环境显示中英文，man 为英文；运行日志仍主要是中文。" data-en="0.3.3: apkm remove delegates to apkg, validates IDs, deduplicates, skips absent apps and verifies removal. Uninstall normally deletes app data and requires confirmation or --yes before the command. Help follows the locale; manuals are English, while runtime logs remain mostly Chinese.">0.3.3：apkm remove 委托 apkg，校验包名、去重、跳过未安装应用并确认卸载结果。卸载通常删除应用数据，需要交互确认或命令前的 --yes。help 按语言环境显示中英文，man 为英文；运行日志仍主要是中文。</p>
+<p data-zh="Termux 已配置本项目软件源后可这样升级：" data-en="Once the project's Termux repository is configured, upgrade with:">Termux 已配置本项目软件源后可这样升级：</p><pre>apt update
+apt install --no-install-recommends apkm</pre></section>
+<section id="trust"><h2 data-zh="签名公钥" data-en="Signing key">签名公钥</h2><p><a href="keys/apkm.gpg">apkm.gpg</a> · <a href="keys/FINGERPRINT.txt">FINGERPRINT.txt</a></p><pre>C198FBB87F5D87047E86DD24995549BDF64D01F9</pre><p data-zh="信任公钥前，请通过独立可信渠道交叉核对完整指纹；同站下载的公钥和指纹不能构成独立认证。" data-en="Cross-check the complete fingerprint through an independent trusted channel before trusting the key. A key and fingerprint from this same site alone do not independently authenticate the publisher.">信任公钥前，请通过独立可信渠道交叉核对完整指纹；同站下载的公钥和指纹不能构成独立认证。</p></section>
+<section id="docs"><h2 data-zh="文档与故障排查" data-en="Documentation and troubleshooting">文档与故障排查</h2><ul>
+<li><a href="https://github.com/villager1314/repo#readme">English README</a> · <a href="https://github.com/villager1314/repo/blob/main/README.zh-CN.md">中文 README</a></li>
+<li><a href="https://github.com/villager1314/repo/blob/main/docs/TROUBLESHOOTING.md">Troubleshooting</a> — ADB, signatures, cache, Termux</li>
+<li><a href="https://github.com/villager1314/repo/blob/main/docs/FDROID.md">F-Droid (中文)</a> · <a href="https://github.com/villager1314/repo/blob/main/docs/APK-SOURCES.md">Other APK sources (中文)</a></li>
+<li><a href="https://github.com/villager1314/repo/blob/main/CHANGELOG.md">Changelog</a> · <a href="https://github.com/villager1314/repo/blob/main/CONTRIBUTING.md">Contributing</a> · <a href="https://github.com/villager1314/repo/issues/new/choose">Issues</a></li>
+</ul></section>
+<footer><small>APKM / APKG · MIT · Page updated 2026-10-08 · client v0.3.3</small></footer>
+<script>
+function setLanguage(lang){document.documentElement.lang=lang==='en'?'en':'zh-CN';document.querySelectorAll('[data-zh][data-en]').forEach(el=>{el.textContent=el.dataset[lang]});try{localStorage.setItem('apkm-language',lang)}catch(e){}}
+try{const saved=localStorage.getItem('apkm-language');if(saved==='en'||saved==='zh')setLanguage(saved)}catch(e){}
+</script>
+</body></html>
