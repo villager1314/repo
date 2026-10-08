@@ -14,7 +14,7 @@
 - 没有真实 Termux 设备；安装、无线 ADB 和宿主 root 功能仍需实机测试。
 - 没有连接真实安卓设备；ADB 安装和 root 直接安装尚需实机测试。
 - 没有真实 Arch/pacman、ARM64 Linux 或 CachyOS；这些系统的安装和依赖解析未实机验证。
-- 原有四个 Linux 源已在线验证；Termux 源本次发布后检查。
+- 四个 Linux 源及 Termux 源已完成在线索引检查（0.3.3）。
 - 软件源没有真实 APK，需要维护者添加。
 
 Arch 包和数据库按照 ALPM 归档格式生成；没有使用 makepkg/repo-add 构建，首次在 Arch 上发布前建议用 pacman 验证。

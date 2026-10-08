@@ -1,0 +1,46 @@
+name: Publish signed client release
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/release.yml, src/apkm.py]
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: client-release
+  cancel-in-progress: false
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify and publish prebuilt signed assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          version=$(python3 -c 'import runpy; print(runpy.run_path("src/apkm.py")["VERSION"])')
+          tag="v$version"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo "Release already exists: $tag"
+            exit 0
+          fi
+          mkdir release-assets
+          cp "site/debian/amd64/apkm_${version}-1_all.deb" "release-assets/apkm_${version}-1_debian_all.deb"
+          cp "site/termux/apkm_${version}-1_all.deb" "release-assets/apkm_${version}-1_termux_all.deb"
+          cp "site/arch/x86_64/apkm-${version}-1-any.pkg.tar.zst" release-assets/
+          cp "site/arch/x86_64/apkm-${version}-1-any.pkg.tar.zst.sig" release-assets/
+          cp site/keys/apkm.gpg release-assets/
+          gpgv --keyring "$PWD/site/keys/apkm.gpg" "release-assets/apkm-${version}-1-any.pkg.tar.zst.sig" "release-assets/apkm-${version}-1-any.pkg.tar.zst"
+          for dir in site/debian/amd64 site/debian/arm64 site/termux; do
+            gpgv --keyring "$PWD/site/keys/apkm.gpg" "$dir/Release.gpg" "$dir/Release"
+          done
+          (cd release-assets && sha256sum * > SHA256SUMS)
+          python3 - "$version" <<'PYNOTES'
+          import pathlib, sys
+          text=pathlib.Path('CHANGELOG.md').read_text()
+          section=text.split('## '+sys.argv[1]+'\n',1)[1].split('\n## ',1)[0].strip()
+          pathlib.Path('release-notes.md').write_text(section+'\n\nChoose Debian or Termux carefully; they use different paths and dependencies. Arch packages target x86_64/aarch64. See README for repository setup, trust checks and physical-device limitations.\n')
+          PYNOTES
+          gh release create "$tag" release-assets/* --target "$GITHUB_SHA" --title "APKM / APKG $version" --notes-file release-notes.md

@@ -1,0 +1,16 @@
+name: Client checks
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y zstd gpgv groff
+      - run: python3 -m unittest discover -s tests -v
+      - run: python3 scripts/check_repositories.py
+      - run: groff -man -Tutf8 docs/apkm.1 >/dev/null && groff -man -Tutf8 docs/apkg.1 >/dev/null
