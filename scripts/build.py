@@ -4,7 +4,7 @@ import argparse, base64, gzip, hashlib, io, json, os, shutil, subprocess, tarfil
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
 SITE=ROOT/'site'
-VER='0.3.4'
+VER='0.3.5'
 PGP_KEY=None
 def call(cmd,**kw):return subprocess.run(cmd,check=True,**kw)
 def sign(path,key):

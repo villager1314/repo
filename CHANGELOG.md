@@ -8,6 +8,11 @@ Versions below describe client behavior. Dates are omitted where the original re
 - Troubleshooting, maintenance and contribution guides; issue and pull-request templates.
 - CI checks and GitHub release publication with distinct Debian/Termux assets and checksums.
 
+## 0.3.5
+
+- Keep the original front-facing Niu Lai art for `apkm moo`.
+- Use the first side-facing Mama portrait for `apkm moo moo`, with the Niu Lai caption.
+
 ## 0.3.4
 
 - Add offline `apkm moo` and `apkm moo moo` terminal easter eggs.

@@ -16,7 +16,7 @@ import urllib.parse
 import urllib.request
 import zipfile
 
-VERSION = '0.3.4'
+VERSION = '0.3.5'
 BASE_URL = 'https://villager1314.github.io/repo'
 CONFIG = Path(os.environ.get('XDG_CONFIG_HOME', str(Path.home()/'.config'))) / 'apkm'
 CACHE = Path(os.environ.get('XDG_CACHE_HOME', str(Path.home()/'.cache'))) / 'apkm'
@@ -385,39 +385,8 @@ def cleanup_apk(path, out):
 
 
 
-NIU_LAI_ART = r"""          /)             (\
-         / |             | \
-        /  |_____________|  \
-        \_/               \_/
-     __/   __         __    \__
-    /  \  /  \       /  \   /  \
-    \__/  \ o/       \o /   \__/
-       |      _______      |
-       |    /         \    |
-       |   |  o     o  |   |
-        \  |           |  /
-         \  \_________/  /
-          \_____________/
-             /       \
-            /         \
-""".rstrip()
-
-# Hand-drawn 女 + 马 strokes, doubled to form 妈妈. ASCII only, no font dependency.
-MAMA_GLYPH = (
-    "   #     #######",
-    "   #           #",
-    "   #       #   #",
-    "#######    #   #",
-    "  #   #    #####",
-    "  #   #    #    ",
-    " #    #    #####",
-    "  #  #         #",
-    "   ##    ##### #",
-    "  #  #         #",
-    " #    #       # ",
-    "#            #  ",
-)
-MAMA_ART = '\n'.join(row + '   ' + row for row in MAMA_GLYPH)
+NIU_LAI_ART = '          /)             (\\\n         / |             | \\\n        /  |_____________|  \\\n        \\_/               \\_/\n     __/   __         __    \\__\n    /  \\  /  \\       /  \\   /  \\\n    \\__/  \\ o/       \\o /   \\__/\n       |      _______      |\n       |    /         \\    |\n       |   |  o     o  |   |\n        \\  |           |  /\n         \\  \\_________/  /\n          \\_____________/\n             /       \\\n            /         \\'
+MAMA_ART = '       /\\\n      /  \\               /|\n      |   \\             / |\n       \\   \\____________/  |\n    ___/       ____       \\__\n   /   \\      /    \\   __   \\\n   \\__  |        (o)   (o)  |\n      \\ |             ______/\n       \\|           /       \\\n        |          /   o     |\n        |         |          |\n        |          \\________/\n         \\          \\______/\n          \\_______________/\n           /          \\\n          /            \\'
 
 
 def parser(program):
@@ -485,9 +454,7 @@ def main(argv=None,program=None):
     args=parser(program).parse_args(argv);out=Output(args)
     try:
         if args.command=='moo':
-            message=NIU_LAI_ART
-            if args.variant: message+='\n\n'+MAMA_ART+'\n\n..."Niu Lai!"...'
-            else: message+='\n\n..."Ma Ma!"...'
+            message=(MAMA_ART+'\n\n..."Niu Lai!"...') if args.variant else (NIU_LAI_ART+'\n\n..."Ma Ma!"...')
             if args.json: out.event('moo',message)
             else: print(message)
             return 0

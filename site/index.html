@@ -9,9 +9,9 @@
 </style>
 </head>
 <body>
-<header><nav aria-label="Language"><button type="button" onclick="setLanguage('zh')">简体中文</button><button type="button" onclick="setLanguage('en')">English</button></nav><h1>APKM / APKG</h1><p><strong>v0.3.4</strong> · Android APK manager</p>
+<header><nav aria-label="Language"><button type="button" onclick="setLanguage('zh')">简体中文</button><button type="button" onclick="setLanguage('en')">English</button></nav><h1>APKM / APKG</h1><p><strong>v0.3.5</strong> · Android APK manager</p>
 <p data-zh="从可信软件源下载 APK，通过已授权 ADB 或安卓宿主 root 安装。APKM 是源客户端，APKG 是安装后端；与 .apkm 容器格式无关，也不管理 Arch 的 pkg 软件包。" data-en="Download APKs from trusted repositories and install through authorized ADB or Android host root. APKM is the frontend; APKG is the backend. This project is unrelated to .apkm containers and does not manage Arch pkg archives.">从可信软件源下载 APK，通过已授权 ADB 或安卓宿主 root 安装。APKM 是源客户端，APKG 是安装后端；与 .apkm 容器格式无关，也不管理 Arch 的 pkg 软件包。</p>
-<div class="links"><a href="https://github.com/villager1314/repo">GitHub</a><a href="https://github.com/villager1314/repo/releases/tag/v0.3.4">Release v0.3.4</a><a href="https://github.com/villager1314/repo/actions/workflows/ci.yml">CI</a><a href="https://github.com/villager1314/repo/blob/main/LICENSE">MIT License</a></div>
+<div class="links"><a href="https://github.com/villager1314/repo">GitHub</a><a href="https://github.com/villager1314/repo/releases/tag/v0.3.5">Release v0.3.5</a><a href="https://github.com/villager1314/repo/actions/workflows/ci.yml">CI</a><a href="https://github.com/villager1314/repo/blob/main/LICENSE">MIT License</a></div>
 </header>
 <nav aria-label="Sections"><a href="#repositories" data-zh="软件源" data-en="Repositories">软件源</a><a href="#usage" data-zh="使用" data-en="Usage">使用</a><a href="#trust" data-zh="签名公钥" data-en="Signing key">签名公钥</a><a href="#docs" data-zh="文档" data-en="Documentation">文档</a></nav>
 <section id="repositories"><h2 data-zh="软件源与安装入口" data-en="Repositories and installation">软件源与安装入口</h2>
@@ -32,7 +32,7 @@ apkm remove com.example.app
 LANG=C apkm --help
 man apkm</pre>
 <p data-zh="搜索、详情和安装读取已验证的本地索引；仅添加源、切换镜像或 update 时下载索引。安装成功并确认版本后自动删除 APK；--keep-apk 可保留。" data-en="Search, info and install read verified local indexes. Indexes download on source addition, mirror switching or update. Successful installation and version confirmation delete the APK; --keep-apk retains it.">搜索、详情和安装读取已验证的本地索引；仅添加源、切换镜像或 update 时下载索引。安装成功并确认版本后自动删除 APK；--keep-apk 可保留。</p>
-<p data-zh="0.3.4：apkm remove 委托 apkg，校验包名、去重、跳过未安装应用并确认卸载结果。卸载通常删除应用数据，需要交互确认或命令前的 --yes。help 按语言环境显示中英文，man 为英文；运行日志仍主要是中文。" data-en="0.3.4: apkm remove delegates to apkg, validates IDs, deduplicates, skips absent apps and verifies removal. Uninstall normally deletes app data and requires confirmation or --yes before the command. Help follows the locale; manuals are English, while runtime logs remain mostly Chinese.">0.3.4：apkm remove 委托 apkg，校验包名、去重、跳过未安装应用并确认卸载结果。卸载通常删除应用数据，需要交互确认或命令前的 --yes。help 按语言环境显示中英文，man 为英文；运行日志仍主要是中文。</p>
+<p data-zh="0.3.5：apkm remove 委托 apkg，校验包名、去重、跳过未安装应用并确认卸载结果。卸载通常删除应用数据，需要交互确认或命令前的 --yes。help 按语言环境显示中英文，man 为英文；运行日志仍主要是中文。" data-en="0.3.5: apkm remove delegates to apkg, validates IDs, deduplicates, skips absent apps and verifies removal. Uninstall normally deletes app data and requires confirmation or --yes before the command. Help follows the locale; manuals are English, while runtime logs remain mostly Chinese.">0.3.5：apkm remove 委托 apkg，校验包名、去重、跳过未安装应用并确认卸载结果。卸载通常删除应用数据，需要交互确认或命令前的 --yes。help 按语言环境显示中英文，man 为英文；运行日志仍主要是中文。</p>
 <p data-zh="Termux 已配置本项目软件源后可这样升级：" data-en="Once the project's Termux repository is configured, upgrade with:">Termux 已配置本项目软件源后可这样升级：</p><pre>apt update
 apt install --no-install-recommends apkm</pre></section>
 <section id="trust"><h2 data-zh="签名公钥" data-en="Signing key">签名公钥</h2><p><a href="keys/apkm.gpg">apkm.gpg</a> · <a href="keys/FINGERPRINT.txt">FINGERPRINT.txt</a></p><pre>C198FBB87F5D87047E86DD24995549BDF64D01F9</pre><p data-zh="信任公钥前，请通过独立可信渠道交叉核对完整指纹；同站下载的公钥和指纹不能构成独立认证。" data-en="Cross-check the complete fingerprint through an independent trusted channel before trusting the key. A key and fingerprint from this same site alone do not independently authenticate the publisher.">信任公钥前，请通过独立可信渠道交叉核对完整指纹；同站下载的公钥和指纹不能构成独立认证。</p></section>
@@ -42,7 +42,7 @@ apt install --no-install-recommends apkm</pre></section>
 <li><a href="https://github.com/villager1314/repo/blob/main/docs/FDROID.md">F-Droid (中文)</a> · <a href="https://github.com/villager1314/repo/blob/main/docs/APK-SOURCES.md">Other APK sources (中文)</a></li>
 <li><a href="https://github.com/villager1314/repo/blob/main/CHANGELOG.md">Changelog</a> · <a href="https://github.com/villager1314/repo/blob/main/CONTRIBUTING.md">Contributing</a> · <a href="https://github.com/villager1314/repo/issues/new/choose">Issues</a></li>
 </ul></section>
-<footer><small>APKM / APKG · MIT · Page updated 2026-10-08 · client v0.3.4</small></footer>
+<footer><small>APKM / APKG · MIT · Page updated 2026-10-08 · client v0.3.5</small></footer>
 <script>
 function setLanguage(lang){document.documentElement.lang=lang==='en'?'en':'zh-CN';document.querySelectorAll('[data-zh][data-en]').forEach(el=>{el.textContent=el.dataset[lang]});try{localStorage.setItem('apkm-language',lang)}catch(e){}}
 try{const saved=localStorage.getItem('apkm-language');if(saved==='en'||saved==='zh')setLanguage(saved)}catch(e){}
