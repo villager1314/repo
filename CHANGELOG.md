@@ -8,6 +8,10 @@ Versions below describe client behavior. Dates are omitted where the original re
 - Troubleshooting, maintenance and contribution guides; issue and pull-request templates.
 - CI checks and GitHub release publication with distinct Debian/Termux assets and checksums.
 
+## 0.3.4
+
+- Add offline `apkm moo` and `apkm moo moo` terminal easter eggs.
+
 ## 0.3.3
 
 - Delegate APKM removal to APKG without repository access.

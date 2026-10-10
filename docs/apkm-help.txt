@@ -1,11 +1,13 @@
 usage: apkm [-h] [--version] [--mode {auto,adb,root}] [--serial SERIAL]
             [--json] [--no-progress] [--yes]
-            {install,search,update,upgrade,source,info,list,remove,doctor} ...
+            {moo,install,search,update,upgrade,source,info,list,remove,doctor}
+            ...
 
 Signed APK repository client (Linux x86-64 / ARM64)
 
 positional arguments:
-  {install,search,update,upgrade,source,info,list,remove,doctor}
+  {moo,install,search,update,upgrade,source,info,list,remove,doctor}
+    moo                 Niu Lai terminal easter egg
     install             Download and install repository APKs
     search              Search cached repositories
     update              Download, verify and refresh local indexes

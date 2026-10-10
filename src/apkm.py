@@ -16,7 +16,7 @@ import urllib.parse
 import urllib.request
 import zipfile
 
-VERSION = '0.3.3'
+VERSION = '0.3.4'
 BASE_URL = 'https://villager1314.github.io/repo'
 CONFIG = Path(os.environ.get('XDG_CONFIG_HOME', str(Path.home()/'.config'))) / 'apkm'
 CACHE = Path(os.environ.get('XDG_CACHE_HOME', str(Path.home()/'.cache'))) / 'apkm'
@@ -384,6 +384,42 @@ def cleanup_apk(path, out):
         out.event('清理失败', f'应用已安装，APK 未能删除：{e}', path=str(path))
 
 
+
+NIU_LAI_ART = r"""          /)             (\
+         / |             | \
+        /  |_____________|  \
+        \_/               \_/
+     __/   __         __    \__
+    /  \  /  \       /  \   /  \
+    \__/  \ o/       \o /   \__/
+       |      _______      |
+       |    /         \    |
+       |   |  o     o  |   |
+        \  |           |  /
+         \  \_________/  /
+          \_____________/
+             /       \
+            /         \
+""".rstrip()
+
+# Hand-drawn 女 + 马 strokes, doubled to form 妈妈. ASCII only, no font dependency.
+MAMA_GLYPH = (
+    "   #     #######",
+    "   #           #",
+    "   #       #   #",
+    "#######    #   #",
+    "  #   #    #####",
+    "  #   #    #    ",
+    " #    #    #####",
+    "  #  #         #",
+    "   ##    ##### #",
+    "  #  #         #",
+    " #    #       # ",
+    "#            #  ",
+)
+MAMA_ART = '\n'.join(row + '   ' + row for row in MAMA_GLYPH)
+
+
 def parser(program):
     apkg=program=='apkg'
     language=os.environ.get('LC_ALL') or os.environ.get('LC_MESSAGES') or os.environ.get('LANG','en')
@@ -396,6 +432,9 @@ def parser(program):
     p.add_argument('--no-progress',action='store_true',help=tr('只显示阶段日志','Show stage messages only'))
     p.add_argument('--yes',action='store_true',help=tr('跳过卸载确认，不绕过安卓授权','Skip uninstall confirmation, not Android authorization'))
     s=p.add_subparsers(dest='command',required=True)
+    if not apkg:
+        moo=s.add_parser('moo',help=tr('牛来字符画彩蛋','Niu Lai terminal easter egg'))
+        moo.add_argument('variant',nargs='?',choices=['moo'])
     ins=s.add_parser('install',help=tr('安装本地 APK','Install local APKs') if apkg else tr('从软件源下载安装','Download and install repository APKs'))
     ins.add_argument('names',nargs='+',help=tr('本地 APK 路径','Local APK paths') if apkg else tr('软件名','Application names'))
     if not apkg:
@@ -445,6 +484,13 @@ def main(argv=None,program=None):
     program=program or ('apkg' if Path(sys.argv[0]).name=='apkg' else 'apkm')
     args=parser(program).parse_args(argv);out=Output(args)
     try:
+        if args.command=='moo':
+            message=NIU_LAI_ART
+            if args.variant: message+='\n\n'+MAMA_ART+'\n\n..."Niu Lai!"...'
+            else: message+='\n\n..."Ma Ma!"...'
+            if args.json: out.event('moo',message)
+            else: print(message)
+            return 0
         if args.command=='source':
             if args.source_command != 'list' and not re.fullmatch('[a-zA-Z0-9_-]+',args.name):
                 raise Failure('源名仅允许字母、数字、下划线和连字符',2)
