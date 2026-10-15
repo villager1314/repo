@@ -20,3 +20,7 @@
 | App still present after removal | Inspect the selected device and Android's returned error. APKM reports a failed absence check. Work profiles, managed apps and system components may require separate Android administration; automatic system-app removal is not provided. |
 
 For a report, include client version, host environment, device Android version/ABI, backend, command and redacted output. Remove pairing codes, tokens and private keys. Include whether the error occurs with `apkg` directly. Physical-device behavior should be reported separately from mocked tests.
+
+## Archive installation (0.4.0)
+
+Use `apkg install ./application.apkm` (or .apks/.xapk), not `apkm install` with a local path. If a toc.pb multi-variant archive is rejected, extract the target device's APK set using official bundletool first. Unknown targeting is rejected rather than installing every variant. An OBB warning means APK installation may succeed but game data has not been deployed. See [archive support](ARCHIVES.md).

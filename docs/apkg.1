@@ -1,4 +1,4 @@
-.TH APKG 1 "2026-10-06" "apkg 0.3.5" "User Commands"
+.TH APKG 1 "2026-10-15" "apkg 0.4.0" "User Commands"
 .SH NAME
 apkg \- local APK installation backend
 .SH SYNOPSIS
@@ -7,7 +7,7 @@ apkg \- local APK installation backend
 .SH COMMANDS
 .TP
 .B install FILE.apk ...
-Install or update local single APKs. Calls adb install -r or Android host
+Install local APK, APKM, APKS or XAPK files. Calls adb install -r or Android host
 pm install -r -S with APK bytes streamed through standard input.
 .TP
 .B list
@@ -29,7 +29,9 @@ ADB requires device authorization, not Android root.
 Root mode requires Android host su and package-manager access; a Linux uid of
 zero is insufficient. No backend bypasses Android signature checks.
 .SH LIMITATIONS
-Supports single APK files only. No split APK/APKS/APKM containers.
+Supports one-base split archives and universal bundletool APKS. Multi-variant
+toc.pb sets require prior bundletool extraction. Unknown configuration targeting
+is rejected. OBB is skipped with an explicit warning; app resources may be incomplete.
 Local validation checks ZIP format and AndroidManifest.xml presence; Android
 performs the installation and signature checks.
 .SH EXIT STATUS
@@ -49,3 +51,12 @@ Stop on the first failure; applications already removed remain removed.
 .SH LANGUAGE
 This manual is in English. Help uses Chinese for zh locales and English otherwise.
 Use LANG=C apkm --help or LANG=C apkg --help to request English help.
+
+.SH ARCHIVES
+For one-base archives, select compatible ABI splits, closest known density splits,
+and all language splits. Check package IDs, versions and split dependencies.
+ADB uses install-multiple. Root uses install-create/write/commit and attempts
+install-abandon on failure. Android validates signatures at commit.
+Temporary extracted APKs are removed; original local archives are retained.
+Archive installation includes an installed-version check. Limits: 2048 ZIP entries,
+512 APKs, 2 GiB per entry and 8 GiB total declared uncompressed size.

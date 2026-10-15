@@ -38,11 +38,12 @@
               Search or inspect repository applications.
 
        [1minstall [--download-only] [--output-dir PATH] NAME ...[0m
-              Download, verify and optionally install single APK files.  After
-              successful  installation  and  installed-version   confirmation,
-              delete  the  downloaded  APK  by  default.  Failed  installs and
-              --download-only retain it.  Use --keep-apk with install  or  up‐
-              grade to retain successful downloads.
+              Download,  verify  and  optionally  install  APKs  or   declared
+              APKM/APKS/XAPK  archives.  After successful installation and in‐
+              stalled-version confirmation, delete the downloaded APK  by  de‐
+              fault.  Failed  installs  and  --download-only  retain  it.  Use
+              --keep-apk with install or upgrade to  retain  successful  down‐
+              loads.
 
        [1mupgrade [NAME ...][0m
               Upgrade  installed  applications  recognized  by  the configured
@@ -119,4 +120,12 @@
        otherwise.  Use LANG=C apkm --help or LANG=C  apkg  --help  to  request
        English help.
 
-apkm 0.3.3                        2026-10-06                           [4mAPKM[24m(1)
+
+[1mARCHIVE SOURCES[0m
+       Custom signed index entries may declare format apk, apkm, apks or xapk.
+       Size  and  SHA256  cover  the  entire archive; absent format means apk.
+       Archive layout support and OBB skipping follow apkg(1).  F-Droid  still
+       selects  standalone  APKs.  The  add_apk.py  maintainer  helper remains
+       standalone-APK only.
+
+apkm 0.4.0                        2026-10-15                           [4mAPKM[24m(1)

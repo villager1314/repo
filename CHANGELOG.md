@@ -8,6 +8,17 @@ Versions below describe client behavior. Dates are omitted where the original re
 - Troubleshooting, maintenance and contribution guides; issue and pull-request templates.
 - CI checks and GitHub release publication with distinct Debian/Termux assets and checksums.
 
+## 0.4.0
+
+- Install one-base APKM/APKS/XAPK archives through authorized ADB or Android host root.
+- Parse binary Android manifests; select ABI/density splits and retain languages.
+- Validate package/version/dependencies, archive limits and unsafe ZIP entries.
+- Use ADB install-multiple or root sessions; abandon failed sessions and clean temporary files.
+- Skip OBB with explicit warnings and confirm installed versions.
+- Support signed custom-source archive format metadata and whole-archive hashes.
+- Multi-variant bundletool toc.pb sets remain unsupported; universal APKS work.
+- No new third-party runtime dependencies; physical-device validation remains pending.
+
 ## 0.3.5
 
 - Keep the original front-facing Niu Lai art for `apkm moo`.

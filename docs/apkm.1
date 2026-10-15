@@ -1,4 +1,4 @@
-.TH APKM 1 "2026-10-06" "apkm 0.3.5" "User Commands"
+.TH APKM 1 "2026-10-15" "apkm 0.4.0" "User Commands"
 .SH NAME
 apkm \- signed Android APK repository client
 .SH SYNOPSIS
@@ -33,7 +33,7 @@ then replace the source URL while retaining the source name.
 Search or inspect repository applications.
 .TP
 .B install [--download-only] [--output-dir PATH] NAME ...
-Download, verify and optionally install single APK files.
+Download, verify and optionally install APKs or declared APKM/APKS/XAPK archives.
 After successful installation and installed-version confirmation, delete
 the downloaded APK by default. Failed installs and --download-only retain it.
 Use --keep-apk with install or upgrade to retain successful downloads.
@@ -99,3 +99,9 @@ Stop on the first failure; applications already removed remain removed.
 .SH LANGUAGE
 This manual is in English. Help uses Chinese for zh locales and English otherwise.
 Use LANG=C apkm --help or LANG=C apkg --help to request English help.
+
+.SH ARCHIVE SOURCES
+Custom signed index entries may declare format apk, apkm, apks or xapk.
+Size and SHA256 cover the entire archive; absent format means apk.
+Archive layout support and OBB skipping follow apkg(1). F-Droid still selects
+standalone APKs. The add_apk.py maintainer helper remains standalone-APK only.

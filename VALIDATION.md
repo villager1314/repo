@@ -36,3 +36,7 @@ Actual remote indexes normalized: Izzy 1399 apps / 2957 variants; Guardian 16 / 
 ## 0.3.3 removal and English help
 
 35 tests pass, including offline removal delegation, batch validation before mutation, confirmation before backend access, duplicate IDs, absent-app skip, post-uninstall absence checks, and locale-selected help. English man pages rendered with groff; four repository signatures and isolated APT checks pass. Physical Android uninstall remains untested.
+
+## 0.4.0 split archives
+
+62 tests pass, including binary/text manifest parsing, ABI/density/language selection, package/version mismatches, missing base, duplicate splits and ZIP entries, unknown configuration targeting, path traversal, symlinks, size limits, feature dependencies, OBB skip reporting, archive hash downloads, temporary cleanup, post-install mismatch, actual APKG subprocess using simulated ADB, and root create/write/commit/abandon behavior. An actual F-Droid cache-cleaner APK's binary manifest was parsed (package com.zinaro.cachecleanerwidget, versionCode 1, minSdk 24). This is metadata validation, not a real split install. Physical Android archive installation and real APK signature compatibility remain untested.

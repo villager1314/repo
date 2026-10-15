@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
-"""APKM/APKG 0.3.1: signed APK repository client and Android install backend."""
+"""APKM/APKG 0.4.0: signed APK repository client and Android install backend."""
 import argparse
+import struct
+import stat
+import xml.etree.ElementTree as ET
 import hashlib
 import json
 import os
@@ -16,7 +19,7 @@ import urllib.parse
 import urllib.request
 import zipfile
 
-VERSION = '0.3.5'
+VERSION = '0.4.0'
 BASE_URL = 'https://villager1314.github.io/repo'
 CONFIG = Path(os.environ.get('XDG_CONFIG_HOME', str(Path.home()/'.config'))) / 'apkm'
 CACHE = Path(os.environ.get('XDG_CACHE_HOME', str(Path.home()/'.cache'))) / 'apkm'
@@ -127,6 +130,7 @@ def validate_index(index):
             raise Failure('SHA256 不合法', 4)
         if type(p.get('size')) is not int or p['size'] <= 0:
             raise Failure('APK 大小必须为正整数', 4)
+        if p.get('format','apk') not in {'apk','apkm','apks','xapk'}: raise Failure('不支持的软件包格式',4)
         if not isinstance(p.get('url'),str) or not p['url']:
             raise Failure('缺少 APK 地址', 4)
     return index
@@ -308,6 +312,36 @@ class Backend:
             raise Failure((p.stderr+'\n'+p.stdout).strip() or '安卓未返回安装成功',5)
         self.out.event('安装','安卓返回 Success')
 
+    def install_set(self,paths):
+        if len(paths)==1: return self.install(paths[0])
+        self.out.event('安装','整组 APK 安装中；签名一致性由 Android 验证')
+        if self.mode=='adb':
+            result=run(self.prefix+['install-multiple','-r']+[str(p.resolve()) for p in paths],check=False,timeout=600)
+            if result.returncode or not any(line.strip()=='Success' for line in result.stdout.splitlines()):
+                raise Failure((result.stderr+'\n'+result.stdout).strip() or '拆分 APK 安装失败',5)
+        else:
+            total=sum(p.stat().st_size for p in paths)
+            result=run(self.prefix+[f'/system/bin/pm install-create -r -S {total}'],check=False,timeout=30)
+            match=re.search(r'Success[^\n]*\[(\d+)\]',result.stdout)
+            if result.returncode or not match: raise Failure('无法创建安卓安装会话：'+result.stdout+result.stderr,5)
+            session=match[1]; committed=False
+            try:
+                for i,path in enumerate(paths):
+                    command=f'/system/bin/pm install-write -S {path.stat().st_size} {session} part{i}.apk -'
+                    with path.open('rb') as source:
+                        result=subprocess.run(self.prefix+[command],stdin=source,capture_output=True,timeout=300)
+                    if result.returncode or not result.stdout.strip().startswith(b'Success'):
+                        raise Failure('写入安装会话失败：'+(result.stdout+result.stderr).decode(errors='replace'),5)
+                result=run(self.prefix+[f'/system/bin/pm install-commit {session}'],check=False,timeout=300)
+                if result.returncode or not any(line.strip()=='Success' for line in result.stdout.splitlines()):
+                    raise Failure('提交安装会话失败：'+result.stdout+result.stderr,5)
+                committed=True
+            finally:
+                if not committed:
+                    try: run(self.prefix+[f'/system/bin/pm install-abandon {session}'],check=False,timeout=30)
+                    except (Failure,OSError,subprocess.TimeoutExpired): pass
+        self.out.event('安装','安卓返回 Success')
+
     def remove(self, package):
         if not re.fullmatch(r'[A-Za-z][A-Za-z0-9_]*(?:\.[A-Za-z][A-Za-z0-9_]*)+',package):
             raise Failure('安卓包名不合法',2)
@@ -334,17 +368,221 @@ def check_apk(path):
         raise Failure(f'无法读取 APK：{e}',4)
 
 
+
+# Archive support is dependency-free. Android validates APK signing certificates at commit.
+ARCHIVE_FORMATS = {'apkm', 'apks', 'xapk'}
+MAX_ARCHIVE_BYTES = 8 * 1024**3
+MAX_MANIFEST_BYTES = 8 * 1024**2
+ABI_SPLITS = {'arm64_v8a':'arm64-v8a', 'armeabi_v7a':'armeabi-v7a', 'x86':'x86', 'x86_64':'x86_64'}
+DENSITY_SPLITS = {'ldpi':120, 'mdpi':160, 'tvdpi':213, 'hdpi':240, 'xhdpi':320, 'xxhdpi':480, 'xxxhdpi':640}
+ANDROID_NS = 'http://schemas.android.com/apk/res/android'
+
+
+def archive_entries(z):
+    infos=z.infolist()
+    if len(infos)>2048: raise Failure('归档条目过多',4)
+    seen=set(); total=0
+    for entry in infos:
+        name=entry.filename
+        if name in seen or '\\' in name or name.startswith('/') or any(p in ('..','') for p in name.rstrip('/').split('/')) or ':' in name:
+            raise Failure('归档存在重复或不安全路径',4)
+        seen.add(name)
+        if stat.S_ISLNK(entry.external_attr >> 16) or entry.flag_bits & 1:
+            raise Failure('不支持符号链接或加密归档',4)
+        total+=entry.file_size
+        if entry.file_size>2*1024**3 or total>MAX_ARCHIVE_BYTES:
+            raise Failure('归档解压大小超过限制',4)
+    apks=[i for i in infos if not i.is_dir() and i.filename.lower().endswith('.apk')]
+    if not apks or len(apks)>512: raise Failure('归档缺少 APK 或包含过多 APK',4)
+    if any(Path(name).name=='toc.pb' for name in seen):
+        # Universal bundletool sets need no device targeting. Multi-variant protobuf
+        # sets must be selected by bundletool, not guessed from filenames.
+        if len(apks)!=1 or Path(apks[0].filename).name!='universal.apk':
+            raise Failure('此 APKS 含 bundletool 多变体 toc.pb；请先用 bundletool extract-apks 按设备提取，或提供 universal APKS',4)
+    return apks, any(i.filename.lower().endswith('.obb') for i in infos)
+
+
+def manifest_elements(data):
+    """Read relevant element attributes from Android binary XML (or text fixtures)."""
+    if len(data)>MAX_MANIFEST_BYTES: raise Failure('AndroidManifest.xml 过大',4)
+    if data.lstrip().startswith(b'<'):
+        if b'<!DOCTYPE' in data or b'<!ENTITY' in data: raise Failure('不支持 XML 实体',4)
+        root=ET.fromstring(data)
+        return [(e.tag.rsplit('}',1)[-1],dict(e.attrib)) for e in root.iter()]
+    def u16(o): return struct.unpack_from('<H',data,o)[0]
+    def u32(o): return struct.unpack_from('<I',data,o)[0]
+    if len(data)<8 or u16(0)!=3 or u16(2)!=8 or u32(4)!=len(data): raise Failure('无效二进制 AndroidManifest.xml',4)
+    strings=[]; result=[]; offset=8
+    while offset<len(data):
+        if offset+8>len(data): raise Failure('XML chunk 截断',4)
+        kind,header,size=struct.unpack_from('<HHI',data,offset)
+        end=offset+size
+        if header<8 or size<header or end>len(data): raise Failure('XML chunk 越界',4)
+        if kind==1:
+            if header<28: raise Failure('XML 字符串池头损坏',4)
+            count=u32(offset+8); flags=u32(offset+16); start=offset+u32(offset+20)
+            if count>100000 or offset+header+count*4>end or start<offset+header+count*4 or start>end: raise Failure('XML 字符串池越界',4)
+            strings=[]
+            def length(pos,utf8):
+                if pos+(1 if utf8 else 2)>end: raise Failure('XML 字符串截断',4)
+                first=data[pos] if utf8 else u16(pos); pos+=1 if utf8 else 2
+                mask=0x80 if utf8 else 0x8000
+                if first & mask:
+                    if pos+(1 if utf8 else 2)>end: raise Failure('XML 字符串长度截断',4)
+                    nxt=data[pos] if utf8 else u16(pos); pos+=1 if utf8 else 2
+                    first=((first & (mask-1)) << (8 if utf8 else 16)) | nxt
+                return first,pos
+            for i in range(count):
+                pos=start+u32(offset+header+i*4)
+                if pos<start or pos>=end: raise Failure('XML 字符串偏移越界',4)
+                if flags & 0x100:
+                    _,pos=length(pos,True); n,pos=length(pos,True); width=1; enc='utf-8'
+                else:
+                    n,pos=length(pos,False); width=2; enc='utf-16le'; n*=2
+                if pos+n+width>end or any(data[pos+n:pos+n+width]): raise Failure('XML 字符串截断',4)
+                strings.append(data[pos:pos+n].decode(enc))
+        elif kind==0x102:
+            if header<16 or offset+header+20>end: raise Failure('XML 元素损坏',4)
+            ext=offset+header
+            def string(index):
+                if index==0xffffffff: return ''
+                if index>=len(strings): raise Failure('XML 字符串索引越界',4)
+                return strings[index]
+            tag=string(u32(ext+4)); attr_start=u16(ext+8); attr_size=u16(ext+10); count=u16(ext+12)
+            pos=ext+attr_start
+            if attr_start<20 or attr_size<20 or pos+count*attr_size>end: raise Failure('XML 属性越界',4)
+            attrs={}
+            for i in range(count):
+                a=pos+i*attr_size; ns=string(u32(a)); name=string(u32(a+4)); raw=u32(a+8); typed_size=u16(a+12); typ=data[a+15]; value=u32(a+16)
+                if typed_size!=8: raise Failure('XML 属性类型损坏',4)
+                if raw!=0xffffffff: value=string(raw)
+                elif typ==3: value=string(value)
+                elif typ in (0x10,0x11,0x12): value=str(value)
+                else: value=''
+                key=('{'+ns+'}' if ns else '')+name
+                if key in attrs: raise Failure('XML 属性重复',4)
+                attrs[key]=value
+            result.append((tag,attrs))
+        offset=end
+    return result
+
+
+def apk_metadata(path):
+    try:
+        with zipfile.ZipFile(path) as z:
+            if z.namelist().count('AndroidManifest.xml')!=1: raise Failure('APK Manifest 缺失或重复',4)
+            if z.getinfo('AndroidManifest.xml').file_size>MAX_MANIFEST_BYTES: raise Failure('APK Manifest 过大',4)
+            elements=manifest_elements(z.read('AndroidManifest.xml'))
+            manifests=[a for tag,a in elements if tag=='manifest']
+            if len(manifests)!=1: raise Failure('APK manifest 根节点无效',4)
+            root=manifests[0]
+            def android(attrs,key,default=''): return attrs.get('{'+ANDROID_NS+'}'+key,default)
+            package=root.get('package',''); version=android(root,'versionCode'); major=android(root,'versionCodeMajor','0')
+            if not re.fullmatch(r'[A-Za-z][A-Za-z0-9_]*(?:\.[A-Za-z][A-Za-z0-9_]*)+',package) or not version.isdigit() or not major.isdigit(): raise Failure('APK 包名或版本无效',4)
+            split=root.get('split',''); target=android(root,'configForSplit',root.get('configForSplit',''))
+            native={n.split('/')[1] for n in z.namelist() if n.startswith('lib/') and len(n.split('/'))>=3 and n.endswith('.so')}
+            sdk=1
+            for tag,attrs in elements:
+                if tag=='uses-sdk':
+                    value=android(attrs,'minSdkVersion','1')
+                    if not value.isdigit(): raise Failure('不支持预览 SDK APK',4)
+                    sdk=int(value)
+            dependencies=[android(a,'name') for t,a in elements if t=='uses-split']
+            if not re.fullmatch(r'[A-Za-z0-9_.-]*',split) or not re.fullmatch(r'[A-Za-z0-9_.-]*',target): raise Failure('APK split 名称无效',4)
+            return {'path':path,'package':package,'version':int(version)+(int(major)<<32),'split':split,'target':target,'native':native,'min_sdk':sdk,'dependencies':dependencies}
+    except (zipfile.BadZipFile,KeyError,struct.error,UnicodeError,ET.ParseError) as e:
+        raise Failure(f'无法解析 APK 元数据：{e}',4)
+
+
+def select_splits(items,backend):
+    bases=[p for p in items if not p['split']]
+    if len(bases)!=1: raise Failure('归档必须只有一个基础 APK；不支持多个独立变体',4)
+    base=bases[0]; seen=set()
+    for p in items:
+        if (p['package'],p['version'])!=(base['package'],base['version']): raise Failure('拆分 APK 包名或版本不一致',4)
+        if p['split'] in seen: raise Failure('拆分 APK 名称重复',4)
+        seen.add(p['split'])
+    sdk,abis=backend.device_info()
+    abi_groups={}; density_groups={}; selected=[]
+    for p in items:
+        split=p['split']; token=split.rsplit('config.',1)[-1] if 'config.' in split else ''
+        group=p['target'] or (split.split('.config.',1)[0] if '.config.' in split else '')
+        if p['target'] and not token: raise Failure('无法识别配置拆分包的设备目标：'+split,4)
+        if group=='base': group=''
+        if token in ABI_SPLITS:
+            abi_groups.setdefault(group,[]).append((ABI_SPLITS[token],p))
+        elif token in DENSITY_SPLITS:
+            density_groups.setdefault(group,[]).append((DENSITY_SPLITS[token],p))
+        elif token and not re.fullmatch(r'[a-z]{2,3}(?:[._-]r[A-Z]{2}|-[A-Z][a-z]{3}(?:-[A-Z]{2})?)?',token):
+            raise Failure(f'无法安全选择未知配置拆分包：{split}',4)
+        else:
+            # All language splits may coexist. Feature masters are retained and
+            # uses-split dependencies are checked below.
+            selected.append(p)
+    if abi_groups:
+        candidates=[abi for abi in abis if all(any(a==abi for a,_ in group) for group in abi_groups.values()) and all(not p['native'] or abi in p['native'] for p in selected)]
+        if not candidates: raise Failure('没有覆盖所有模块的兼容 ABI',5)
+        for group in abi_groups.values(): selected.append(next(p for a,p in group if a==candidates[0]))
+    if density_groups:
+        text=backend.shell(['wm','density']).stdout
+        values=re.findall(r'(?:Physical|Override) density:\s*(\d+)',text)
+        if not values: raise Failure('无法读取设备屏幕密度以选择 APK',3)
+        density=int(values[-1])
+        for group in density_groups.values(): selected.append(min(group,key=lambda pair:(abs(pair[0]-density),-pair[0]))[1])
+    names={p['split'] for p in selected} | {'base'}
+    for p in selected:
+        if p['min_sdk']>sdk: raise Failure('APK 要求更高 Android API',5)
+        if p['native'] and not p['native'].intersection(abis): raise Failure('APK 原生库与设备 ABI 不兼容',5)
+        if p['target'] and p['target'] not in names: raise Failure('拆分包缺少目标模块',4)
+        if any(n not in names for n in p['dependencies']): raise Failure('拆分包缺少依赖模块',4)
+    return [base]+sorted((p for p in selected if p is not base),key=lambda p:p['split'])
+
+
+def install_archive(path,backend,out):
+    try:
+        with zipfile.ZipFile(path) as z, tempfile.TemporaryDirectory(prefix='apkm-splits-') as temp:
+            entries,obb=archive_entries(z)
+            if obb: out.event('OBB 未安装','归档含 OBB；本版本仅安装 APK，游戏可能仍需扩展数据',obb_installed=False)
+            items=[]
+            for i,entry in enumerate(entries):
+                target=Path(temp)/f'{i}.apk'
+                with z.open(entry) as source, target.open('wb') as dest:
+                    copied=0
+                    for chunk in iter(lambda:source.read(128*1024),b''):
+                        copied+=len(chunk)
+                        if copied>entry.file_size: raise Failure('归档解压大小不符',4)
+                        dest.write(chunk)
+                if copied!=entry.file_size: raise Failure('归档解压文件截断',4)
+                items.append(apk_metadata(target))
+            selected=select_splits(items,backend)
+            out.event('拆分选择',f'{len(selected)}/{len(items)} APK',splits=[p['split'] or 'base' for p in selected])
+            backend.install_set([p['path'] for p in selected])
+            if backend.version(selected[0]['package'])!=selected[0]['version']: raise Failure('归档安装后版本确认失败',5)
+            out.event('结果','APK 安装成功'+('；OBB 未安装' if obb else ''),package_id=selected[0]['package'],obb_installed=False if obb else None)
+    except (zipfile.BadZipFile,RuntimeError,NotImplementedError) as e:
+        raise Failure(f'无法读取 APK 归档：{e}',4)
+
+
+def check_installable(path,format='apk'):
+    if format=='apk': return check_apk(path)
+    if format not in ARCHIVE_FORMATS: raise Failure('不支持的 APK 归档格式',4)
+    try:
+        with zipfile.ZipFile(path) as z: archive_entries(z)
+    except zipfile.BadZipFile as e: raise Failure(f'无效 APK 归档：{e}',4)
+
+
 def download(p,args,out):
     url=validate_url(urllib.parse.urljoin(p['source_url'].rstrip('/')+'/',p['url']))
     dest=Path(args.output_dir).expanduser() if args.output_dir else CACHE/'apks'
     dest.mkdir(parents=True,exist_ok=True)
-    final=dest/f'{p["name"]}-{p["version_code"]}-{p["sha256"][:12]}.apk'
+    format=p.get('format','apk')
+    final=dest/f'{p["name"]}-{p["version_code"]}-{p["sha256"][:12]}.{format}'
     if final.is_file() and final.stat().st_size == p['size']:
         digest = hashlib.sha256()
         with final.open('rb') as f:
             for chunk in iter(lambda: f.read(128*1024), b''): digest.update(chunk)
         if digest.hexdigest() == p['sha256']:
-            check_apk(final)
+            check_installable(final,format)
             out.event('缓存', f'{p["name"]}：复用已校验 APK', path=str(final))
             return final
     fd,temp=tempfile.mkstemp(prefix='.download-',dir=dest)
@@ -366,7 +604,7 @@ def download(p,args,out):
                     last=now
         if done!=p['size'] or digest.hexdigest()!=p['sha256']:
             raise Failure('APK 大小或 SHA256 校验失败',4)
-        check_apk(Path(temp))
+        check_installable(Path(temp),format)
         os.replace(temp,final)
         out.event('校验',f'{p["name"]}：大小和 SHA256 验证通过',path=str(final))
         return final
@@ -405,7 +643,7 @@ def parser(program):
         moo=s.add_parser('moo',help=tr('牛来字符画彩蛋','Niu Lai terminal easter egg'))
         moo.add_argument('variant',nargs='?',choices=['moo'])
     ins=s.add_parser('install',help=tr('安装本地 APK','Install local APKs') if apkg else tr('从软件源下载安装','Download and install repository APKs'))
-    ins.add_argument('names',nargs='+',help=tr('本地 APK 路径','Local APK paths') if apkg else tr('软件名','Application names'))
+    ins.add_argument('names',nargs='+',help=tr('本地 APK/APKM/APKS/XAPK 路径','Local APK/APKM/APKS/XAPK paths') if apkg else tr('软件名','Application names'))
     if not apkg:
         ins.add_argument('--keep-apk',action='store_true',help=tr('安装成功后保留下载的 APK；默认核对安装版本后删除','Keep APKs after successful installation; otherwise delete after version confirmation'))
         ins.add_argument('--download-only',action='store_true',help=tr('只下载并校验','Download and verify only'))
@@ -556,7 +794,9 @@ def main(argv=None,program=None):
             out.event('应用',f'{args.name} versionCode={version}',package_id=args.name,version_code=version)
         elif args.command=='install':
             for name in args.names:
-                path=Path(name).expanduser();check_apk(path);backend.install(path)
+                path=Path(name).expanduser()
+                if path.suffix.lower().lstrip('.') in ARCHIVE_FORMATS: install_archive(path,backend,out)
+                else: check_apk(path);backend.install(path)
         elif args.command=='remove':
             for name in args.names:backend.remove(name)
         return 0

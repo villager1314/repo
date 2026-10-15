@@ -17,7 +17,7 @@ apkm install com.termux
 apkm install --download-only --output-dir ./apks com.termux
 ```
 
-下载模式选最新稳定 APK；存在多个架构时，未连接设备不能保证适合你的手机。安装模式按设备 API、ABI 和必需功能检查，允许选择兼容的旧稳定版本；不支持 split APK。
+下载模式选最新稳定 APK；存在多个架构时，未连接设备不能保证适合你的手机。安装模式按设备 API、ABI 和必需功能检查，允许选择兼容的旧稳定版本；F-Droid 源适配器仍选择独立 APK；本地 APKM/APKS/XAPK 归档安装见 [ARCHIVES.md](https://github.com/villager1314/repo/blob/main/docs/ARCHIVES.md)。
 
 验证官方 `index-v1.json.asc` 的 GPG 签名，再检查每个 APK 的大小和 SHA256。内置官方公钥指纹为 `37D2C98789D8311948394E3E41E7044E1DBA2E89`，来源： https://f-droid.org/docs/Release_Channels_and_Signing_Keys/ 。时间戳倒退或签名失败时拒绝替换缓存。首次添加源及 `apkm update` 会下载并验证完整索引，约 64 MB；当前尚未实现增量更新。搜索、详情及安装使用本地已验证索引。旧版缓存可以沿用，更新时间会显示在输出中。
 

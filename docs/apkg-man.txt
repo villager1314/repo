@@ -8,9 +8,9 @@
 
 [1mCOMMANDS[0m
        [1minstall FILE.apk ...[0m
-              Install or update local single APKs. Calls adb install -r or An‐
-              droid  host  pm  install  -r  -S with APK bytes streamed through
-              standard input.
+              Install  local  APK, APKM, APKS or XAPK files. Calls adb install
+              -r or Android host pm install -r  -S  with  APK  bytes  streamed
+              through standard input.
 
        [1mlist   [22mList applications on the selected Android device.
 
@@ -24,18 +24,21 @@
        [1mdoctor [22mCheck backend selection and target Android SDK/ABI.
 
 [1mGLOBAL OPTIONS[0m
-       --mode auto|adb|root, --serial SERIAL,  --json,  --no-progress,  --yes,
+       --mode  auto|adb|root,  --serial  SERIAL, --json, --no-progress, --yes,
        --version and --help. Options precede the command.
 
 [1mPERMISSIONS[0m
-       ADB  requires  device  authorization,  not Android root.  Root mode re‐
-       quires Android host su and package-manager access; a Linux uid of  zero
+       ADB requires device authorization, not Android  root.   Root  mode  re‐
+       quires  Android host su and package-manager access; a Linux uid of zero
        is insufficient. No backend bypasses Android signature checks.
 
 [1mLIMITATIONS[0m
-       Supports single APK files only. No split APK/APKS/APKM containers.  Lo‐
-       cal  validation checks ZIP format and AndroidManifest.xml presence; An‐
-       droid performs the installation and signature checks.
+       Supports one-base split archives and universal bundletool APKS.  Multi-
+       variant  toc.pb  sets require prior bundletool extraction. Unknown con‐
+       figuration targeting is rejected. OBB is skipped with an explicit warn‐
+       ing; app resources may be incomplete.  Local validation checks ZIP for‐
+       mat and AndroidManifest.xml presence; Android performs the installation
+       and signature checks.
 
 [1mEXIT STATUS[0m
        See apkm(1). A successful installation requires Android to report  Suc‐
@@ -60,4 +63,15 @@
        otherwise.  Use LANG=C apkm --help or LANG=C  apkg  --help  to  request
        English help.
 
-apkg 0.3.3                        2026-10-06                           [4mAPKG[24m(1)
+
+[1mARCHIVES[0m
+       For one-base archives, select compatible ABI splits, closest known den‐
+       sity  splits,  and all language splits. Check package IDs, versions and
+       split dependencies.  ADB uses install-multiple. Root uses  install-cre‐
+       ate/write/commit and attempts install-abandon on failure. Android vali‐
+       dates  signatures  at  commit.   Temporary  extracted APKs are removed;
+       original local archives are retained.  Archive installation includes an
+       installed-version check. Limits: 2048 ZIP entries, 512 APKs, 2 GiB  per
+       entry and 8 GiB total declared uncompressed size.
+
+apkg 0.4.0                        2026-10-15                           [4mAPKG[24m(1)

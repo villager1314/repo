@@ -4,10 +4,10 @@
 
 [![CI](https://github.com/villager1314/repo/actions/workflows/ci.yml/badge.svg)](https://github.com/villager1314/repo/actions/workflows/ci.yml)
 [![Pages](https://github.com/villager1314/repo/actions/workflows/pages.yml/badge.svg)](https://github.com/villager1314/repo/actions/workflows/pages.yml)
-[![Version](https://img.shields.io/badge/version-0.3.5-blue)](https://github.com/villager1314/repo/releases)
+[![Version](https://img.shields.io/badge/version-0.4.0-blue)](https://github.com/villager1314/repo/releases)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
-Download verified APKs from signed repositories and install them through authorized ADB or Android host root. **APKM is the repository frontend; APKG is the installation backend.** The name APKM refers to this project, not the `.apkm` container format. APKG manages Android apps, not Arch Linux pkg archives. Only standalone APK files are supported.
+Download verified APKs from signed repositories and install them through authorized ADB or Android host root. **APKM is the repository frontend; APKG is the installation backend.** The name APKM refers to this project, not the `.apkm` container format. APKG manages Android apps, not Arch Linux pkg archives. Standalone APKs and selected split-APK archive layouts are supported; see [archive support](docs/ARCHIVES.md).
 
 ## Contents
 
@@ -117,6 +117,9 @@ apkm update fdroid
 apkm upgrade
 apkm remove com.example.app
 apkg install ./example.apk
+apkg install ./example.apkm
+apkg install ./example.apks
+apkg install ./example.xapk
 apkm doctor
 ```
 
@@ -147,7 +150,7 @@ apkm source set-url fdroid https://mirrors.tuna.tsinghua.edu.cn/fdroid/repo
 
 TUNA and NYIST mirror F-Droid's main repository, not the third-party repositories listed above. Mirror switching retains the trusted key and rollback checks. APKs are deleted only after successful installation and installed-version confirmation. Failed installs and download-only operations retain them; `--keep-apk` preserves successful downloads. APKG never deletes user-supplied local APKs.
 
-Split APK, APKS, XAPK and `.apkm` containers are unsupported. Updates do not bypass signing conflicts by uninstalling apps. The self-hosted APK repository starts empty; maintainers must add APKs they have permission to distribute.
+Version 0.4.0 supports one-base APKM/APKS/XAPK archives through ADB and Android host root. OBB files are skipped with an explicit warning. Universal bundletool APKS work; multi-variant `toc.pb` sets require extraction with bundletool first. See [archive support](docs/ARCHIVES.md) for selection and limits. Updates do not bypass signing conflicts by uninstalling apps. The self-hosted APK repository starts empty; maintainers must add APKs they have permission to distribute.
 
 ## Troubleshooting
 
@@ -167,6 +170,7 @@ Repository checks require `dpkg-deb`, APT, `gpgv` and `zstd`, and operate with i
 ## Documentation
 
 - [Termux](docs/TERMUX.md), [F-Droid](docs/FDROID.md), [other APK sources](docs/APK-SOURCES.md): detailed guides currently in Chinese.
+- [Archive support](docs/ARCHIVES.md): APKM/APKS/XAPK layout support, OBB behavior and examples.
 - [Troubleshooting](docs/TROUBLESHOOTING.md), [maintenance](docs/MAINTAINING.md), [contributing](CONTRIBUTING.md): English.
 - [Validation](VALIDATION.md): versioned test coverage and device limitations.
 - English man pages: [apkm](docs/apkm.1), [apkg](docs/apkg.1).

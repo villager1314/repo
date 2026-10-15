@@ -234,3 +234,15 @@ man apkg
 ```
 
 卸载使用安卓包名，通常删除应用数据，不需要更新索引；交互模式不加 --yes 会询问确认。英文 man 已包含卸载说明。help 在 zh 语言环境显示中文，其余显示英文，运行日志仍主要为中文。
+
+## APKM / APKS / XAPK（0.4.0）
+
+```sh
+apt update
+apt install --no-install-recommends apkm
+apkg --mode adb install "$HOME/应用.apkm"
+apkg --mode adb install "$HOME/应用.apks"
+apkg --mode root install "$HOME/应用.xapk"
+```
+
+仍需已授权的 ADB 或真正的安卓宿主 root。OBB 不部署；临时文件自动清理、原始归档保留。单套拆分包和 universal APKS 可用；多设备变体的 bundletool APKS 应先按设备提取。详见 [归档说明](https://github.com/villager1314/repo/blob/main/docs/ARCHIVES.md)。安装前会解压归档中的 APK，需要足够临时空间；不添加 Java 或 Python 第三方依赖。

@@ -2,7 +2,7 @@ Origin: APKM
 Label: APKM
 Suite: stable
 Architectures: amd64 all
-Date: Sat, 10 Oct 2026 08:33:04 +0000
+Date: Thu, 15 Oct 2026 11:54:06 +0000
 SHA256:
- a2c54fc977d280648822f1cd8285a92627d3c0f6730ae40f7d9c946b00b23c76 4128 Packages
- 6afea30f427b7f18f9faec6f87f5c3155a63aba9b36c12ff7f1e3ac1eecba17d 1117 Packages.gz
+ 23b1768facb8ae28a81f29427e53f5f9782d95613e4bf6b98914849d8e399da9 4644 Packages
+ 6dfd5ea8b64edcafcd75b3f5732da3eb71fab51e168c7dba492613fb9e23bbc4 1217 Packages.gz

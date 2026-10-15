@@ -2,13 +2,13 @@
 
 [English](README.md) | 简体中文
 
-APKM 是 APK 源客户端，APKG 是安装后端。这里的 APKM 与 `.apkm` 容器格式无关；APKG 不管理 Arch 的 pkg 软件包。本工具仅处理独立 APK。
+APKM 是 APK 源客户端，APKG 是安装后端。这里的 APKM 与 `.apkm` 容器格式无关；APKG 不管理 Arch 的 pkg 软件包。现支持独立 APK 及部分拆分 APK 归档，详见 [归档安装说明](docs/ARCHIVES.md)。
 
 可信源下载 → 校验 → ADB 或安卓宿主 root 安装。
 
 [![CI](https://github.com/villager1314/repo/actions/workflows/ci.yml/badge.svg)](https://github.com/villager1314/repo/actions/workflows/ci.yml)
 [![Pages](https://github.com/villager1314/repo/actions/workflows/pages.yml/badge.svg)](https://github.com/villager1314/repo/actions/workflows/pages.yml)
-[![Version](https://img.shields.io/badge/version-0.3.5-blue)](https://github.com/villager1314/repo/releases)
+[![Version](https://img.shields.io/badge/version-0.4.0-blue)](https://github.com/villager1314/repo/releases)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
 从签名 APK 软件源下载应用，通过 ADB 或安卓宿主 root 安装。
@@ -84,7 +84,7 @@ sudo apt update
 sudo apt install --no-install-recommends apkm
 ```
 
-也可以先安装随附的本地 deb：`sudo apt install ./apkm_0.3.5-1_all.deb`。
+也可以先安装随附的本地 deb：`sudo apt install ./apkm_0.4.0-1_all.deb`。
 包包含 apkm、apkg、两份 man 手册和 APK 源公钥。
 
 ## Arch / Arch Linux ARM 安装
@@ -157,7 +157,7 @@ python3 scripts/add_apk.py 软件名 /路径/软件.apk --key FINGERPRINT --desc
 
 脚本复制 APK 到 `site/android/apks/`，更新 revision 和 SHA256，并重新签名。
 提交更新的 site/android/ 即可部署。没有 APK 时目录含 .gitkeep。
-只支持单 APK；不支持 split APK、APKS、XAPK 或 APKM 容器格式。
+此添加脚本仍只处理独立 APK；客户端 0.4.0 可安装单套基础 APK＋拆分包的 APKM/APKS/XAPK。OBB 跳过并提示；bundletool 多变体 APKS 需要先按设备提取。详见 [归档安装](docs/ARCHIVES.md)。
 软件名 apkm 与 .apkm 容器格式没有关系。
 
 ## 重新构建
@@ -222,3 +222,13 @@ LANG=C apkm --help
 - [Termux](docs/TERMUX.md) · [F-Droid](docs/FDROID.md) · [第三方源适配](docs/APK-SOURCES.md)
 - [版本历史](CHANGELOG.md) · [贡献指南](CONTRIBUTING.md) · [验证范围](VALIDATION.md)
 - [发布与下载](https://github.com/villager1314/repo/releases)
+
+## APKM / APKS / XAPK 安装（0.4.0）
+
+```sh
+apkg --mode adb install ./应用.apkm
+apkg --mode adb install ./应用.apks
+apkg --mode root install ./应用.xapk
+```
+
+APK 集合一次性提交，Android 验证签名。ABI 依据目标设备选择、密度取最接近的一份、语言包保留；未知配置拒绝安装。临时解压文件始终清理，用户原始归档保留。含 OBB 时明确提示未安装扩展数据；APK 成功不代表游戏资源齐全。使用范围和限制见 [归档说明](docs/ARCHIVES.md)。
