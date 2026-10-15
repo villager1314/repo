@@ -6,7 +6,7 @@
 | --- | --- |
 | Wireless ADB pairing fails | Enable wireless debugging; reopen the pairing-code dialog and use its current pairing port with `adb pair IP:PORT`. Enter the displayed code. Then use the separate debugging port with `adb connect IP:PORT`. Both devices must be able to reach that address. |
 | Device offline or unauthorized | Run `adb devices`; approve the Android authorization dialog. Reconnect using the current debugging port. Pairing and connection ports can change. |
-| Multiple devices | Copy the intended serial from `adb devices`, then use `apkm --mode adb --serial SERIAL install NAME` or the corresponding removal command. |
+| Multiple devices | Copy the intended serial from `adb devices`, then use `apkm --serial SERIAL install NAME` or the corresponding removal command. |
 | Repository fingerprint differs | Stop before importing or locally signing the key. Cross-check the full fingerprint through an independent trusted channel; investigate an announced key rotation with the maintainer. |
 | GPG signature or hash failure | Retain the existing verified cache. Check the source URL and retry after mirror synchronization. Report source, time and exact error; do not disable signature verification. |
 | APK signing conflict / UPDATE_INCOMPATIBLE | The installed app and new APK may have different signing keys, including upstream versus F-Droid builds. Continue using the original channel, or back up/export data before consciously switching. APKM does not auto-uninstall to bypass this. |

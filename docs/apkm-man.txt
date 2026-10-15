@@ -60,11 +60,12 @@
        Place global options before the command.
 
        [1m--mode auto|adb|root[0m
-              Prefer  authorized  ADB in auto mode; otherwise verify local An‐
-              droid host root.
+              ADB  is the default. Use --mode root explicitly for Android host
+              root.  Use --mode auto to prefer ADB and  allow  verified  host-
+              root fallback.
 
        [1m--serial SERIAL[0m
-              Select an ADB device. Required when multiple  devices  are  con‐
+              Select  an  ADB  device. Required when multiple devices are con‐
               nected.
 
        [1m--json [22mEmit newline-delimited JSON events.
@@ -78,17 +79,17 @@
               Show version or help. Subcommands accept --help.
 
 [1mFILES[0m
-       [4m$XDG_CONFIG_HOME/apkm/sources.json[24m  or ~/.config/apkm/sources.json con‐
+       [4m$XDG_CONFIG_HOME/apkm/sources.json[24m or ~/.config/apkm/sources.json  con‐
        tains repository URLs and trusted keyring paths.
 
        [4m$XDG_CACHE_HOME/apkm/apks/[24m or ~/.cache/apkm/apks/ stores verified down‐
        loads.
 
 [1mSECURITY[0m
-       Repository signatures and APK hashes are verified before  installation.
-       Do  not  trust a public key solely because it arrived from the same un‐
+       Repository  signatures and APK hashes are verified before installation.
+       Do not trust a public key solely because it arrived from the  same  un‐
        trusted site.  APK update signing compatibility is enforced by Android.
-       Linux root and PRoot simulated root do not imply Android host root  ac‐
+       Linux  root and PRoot simulated root do not imply Android host root ac‐
        cess.
 
 [1mPROGRESS[0m
@@ -97,8 +98,8 @@
 
 [1mEXIT STATUS[0m
        0 success; 1 general or partial failure; 2 invalid usage/configuration;
-       3  backend/authorization  failure; 4 integrity/index failure; 5 Android
-       operation failure; 130 interrupted. Network  or  filesystem  exceptions
+       3 backend/authorization failure; 4 integrity/index failure;  5  Android
+       operation  failure;  130  interrupted. Network or filesystem exceptions
        may return 1.
 
 [1mSEE ALSO[0m
@@ -106,26 +107,26 @@
 
 
 [1mUNINSTALL[0m
-       Use  Android package IDs, even when the repository uses a different ap‐
-       plication name.  No repository index or  network  access  is  required.
+       Use Android package IDs, even when the repository uses a different  ap‐
+       plication  name.   No  repository  index or network access is required.
        APKM delegates removal to APKG.  All IDs are validated before confirma‐
        tion or device access.  Duplicate IDs are removed once; absent applica‐
-       tions  are  skipped.  Successful removal requires Android Success and a
-       subsequent absence check.  Removal normally deletes  application  data.
-       Noninteractive  and JSON use require --yes.  Stop on the first failure;
+       tions are skipped.  Successful removal requires Android Success  and  a
+       subsequent  absence  check.  Removal normally deletes application data.
+       Noninteractive and JSON use require --yes.  Stop on the first  failure;
        applications already removed remain removed.
 
 [1mLANGUAGE[0m
        This manual is in English. Help uses Chinese for zh locales and English
-       otherwise.  Use LANG=C apkm --help or LANG=C  apkg  --help  to  request
+       otherwise.   Use  LANG=C  apkm  --help or LANG=C apkg --help to request
        English help.
 
 
 [1mARCHIVE SOURCES[0m
        Custom signed index entries may declare format apk, apkm, apks or xapk.
-       Size  and  SHA256  cover  the  entire archive; absent format means apk.
-       Archive layout support and OBB skipping follow apkg(1).  F-Droid  still
-       selects  standalone  APKs.  The  add_apk.py  maintainer  helper remains
+       Size and SHA256 cover the entire  archive;  absent  format  means  apk.
+       Archive  layout  support and OBB skipping follow apkg(1). F-Droid still
+       selects standalone  APKs.  The  add_apk.py  maintainer  helper  remains
        standalone-APK only.
 
-apkm 0.4.0                        2026-10-15                           [4mAPKM[24m(1)
+apkm 0.4.1                        2026-10-15                           [4mAPKM[24m(1)

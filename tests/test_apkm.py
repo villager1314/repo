@@ -55,6 +55,11 @@ class Tests(unittest.TestCase):
    args=self.args('update');new=json.dumps({'schema_version':1,'revision':8,'packages':[]}).encode()
    with patch.object(m,'CONFIG',root),patch.object(m,'fetch',side_effect=[new,b'sig']),patch.object(m,'run',return_value=subprocess.CompletedProcess([],0,'','')):
     with self.assertRaises(m.Failure):m.refresh('test',{'url':'https://host/','keyring':str(key)},m.Output(args))
+ def test_default_backend(self):
+  for program in ('apkm','apkg'):
+   self.assertEqual(m.parser(program).parse_args(['doctor']).mode,'adb')
+   self.assertEqual(m.parser(program).parse_args(['--mode','root','doctor']).mode,'root')
+   self.assertEqual(m.parser(program).parse_args(['--mode','auto','doctor']).mode,'auto')
  def test_help(self):
   for prog in ['apkm','apkg']:
    with contextlib.redirect_stdout(io.StringIO()):

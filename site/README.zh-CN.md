@@ -8,7 +8,7 @@ APKM 是 APK 源客户端，APKG 是安装后端。这里的 APKM 与 `.apkm` �
 
 [![CI](https://github.com/villager1314/repo/actions/workflows/ci.yml/badge.svg)](https://github.com/villager1314/repo/actions/workflows/ci.yml)
 [![Pages](https://github.com/villager1314/repo/actions/workflows/pages.yml/badge.svg)](https://github.com/villager1314/repo/actions/workflows/pages.yml)
-[![Version](https://img.shields.io/badge/version-0.4.0-blue)](https://github.com/villager1314/repo/releases)
+[![Version](https://img.shields.io/badge/version-0.4.1-blue)](https://github.com/villager1314/repo/releases)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](https://github.com/villager1314/repo/blob/main/LICENSE)
 
 从签名 APK 软件源下载应用，通过 ADB 或安卓宿主 root 安装。
@@ -84,7 +84,7 @@ sudo apt update
 sudo apt install --no-install-recommends apkm
 ```
 
-也可以先安装随附的本地 deb：`sudo apt install ./apkm_0.4.0-1_all.deb`。
+也可以先安装随附的本地 deb：`sudo apt install ./apkm_0.4.1-1_all.deb`。
 包包含 apkm、apkg、两份 man 手册和 APK 源公钥。
 
 ## Arch / Arch Linux ARM 安装
@@ -130,10 +130,12 @@ man apkm
 man apkg
 ```
 
+默认使用 ADB，直接 `apkg install 路径`；安卓 root 显式指定 `--mode root`。需要自动回退时使用 `--mode auto`。
+
 全局参数放在命令前：
 
 ```sh
-apkm --mode adb --serial DEVICE install 软件名
+apkm --serial DEVICE install 软件名
 apkg --mode root install ./软件.apk
 apkg --json install ./软件.apk
 ```
@@ -157,7 +159,7 @@ python3 scripts/add_apk.py 软件名 /路径/软件.apk --key FINGERPRINT --desc
 
 脚本复制 APK 到 `site/android/apks/`，更新 revision 和 SHA256，并重新签名。
 提交更新的 site/android/ 即可部署。没有 APK 时目录含 .gitkeep。
-此添加脚本仍只处理独立 APK；客户端 0.4.0 可安装单套基础 APK＋拆分包的 APKM/APKS/XAPK。OBB 跳过并提示；bundletool 多变体 APKS 需要先按设备提取。详见 [归档安装](https://github.com/villager1314/repo/blob/main/docs/ARCHIVES.md)。
+此添加脚本仍只处理独立 APK；客户端 0.4.1 可安装单套基础 APK＋拆分包的 APKM/APKS/XAPK。OBB 跳过并提示；bundletool 多变体 APKS 需要先按设备提取。详见 [归档安装](https://github.com/villager1314/repo/blob/main/docs/ARCHIVES.md)。
 软件名 apkm 与 .apkm 容器格式没有关系。
 
 ## 重新构建
@@ -223,11 +225,11 @@ LANG=C apkm --help
 - [版本历史](https://github.com/villager1314/repo/blob/main/CHANGELOG.md) · [贡献指南](https://github.com/villager1314/repo/blob/main/CONTRIBUTING.md) · [验证范围](https://github.com/villager1314/repo/blob/main/VALIDATION.md)
 - [发布与下载](https://github.com/villager1314/repo/releases)
 
-## APKM / APKS / XAPK 安装（0.4.0）
+## APKM / APKS / XAPK 安装（0.4.1）
 
 ```sh
-apkg --mode adb install ./应用.apkm
-apkg --mode adb install ./应用.apks
+apkg install ./应用.apkm
+apkg install ./应用.apks
 apkg --mode root install ./应用.xapk
 ```
 

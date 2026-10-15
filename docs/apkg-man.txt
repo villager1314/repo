@@ -74,4 +74,10 @@
        installed-version check. Limits: 2048 ZIP entries, 512 APKs, 2 GiB  per
        entry and 8 GiB total declared uncompressed size.
 
-apkg 0.4.0                        2026-10-15                           [4mAPKG[24m(1)
+
+[1mDEFAULT BACKEND[0m
+       ADB  is the default: apkg install PATH. Root requires --mode root.  Ex‐
+       plicit --mode auto permits authorized ADB to verified  host-root  fall‐
+       back.
+
+apkg 0.4.1                        2026-10-15                           [4mAPKG[24m(1)

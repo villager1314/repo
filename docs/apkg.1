@@ -1,4 +1,4 @@
-.TH APKG 1 "2026-10-15" "apkg 0.4.0" "User Commands"
+.TH APKG 1 "2026-10-15" "apkg 0.4.1" "User Commands"
 .SH NAME
 apkg \- local APK installation backend
 .SH SYNOPSIS
@@ -60,3 +60,7 @@ install-abandon on failure. Android validates signatures at commit.
 Temporary extracted APKs are removed; original local archives are retained.
 Archive installation includes an installed-version check. Limits: 2048 ZIP entries,
 512 APKs, 2 GiB per entry and 8 GiB total declared uncompressed size.
+
+.SH DEFAULT BACKEND
+ADB is the default: apkg install PATH. Root requires --mode root.
+Explicit --mode auto permits authorized ADB to verified host-root fallback.

@@ -5,12 +5,12 @@
 ## Commands
 
 ```sh
-apkg --mode adb install ./application.apkm
-apkg --mode adb --serial DEVICE install ./application.apks
+apkg install ./application.apkm
+apkg --serial DEVICE install ./application.apks
 apkg --mode root install ./application.xapk
 ```
 
-Global options precede the command. File arguments are local to the machine running APKG, including when ADB targets another device. Local archives are retained. Temporary extracted APKs are deleted after success, failure or interruption.
+ADB is the default: `apkg install PATH` is sufficient. Android host root requires `--mode root`; `--mode auto` explicitly enables fallback. Global options precede the command. File arguments are local to the machine running APKG, including when ADB targets another device. Local archives are retained. Temporary extracted APKs are deleted after success, failure or interruption.
 
 ## Supported layouts
 

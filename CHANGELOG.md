@@ -8,6 +8,12 @@ Versions below describe client behavior. Dates are omitted where the original re
 - Troubleshooting, maintenance and contribution guides; issue and pull-request templates.
 - CI checks and GitHub release publication with distinct Debian/Termux assets and checksums.
 
+## 0.4.1
+
+- Default APKM/APKG to ADB, allowing `apkg install PATH` without a mode flag.
+- Keep root explicit and retain opt-in `--mode auto` fallback.
+- Update CLI help and documentation examples.
+
 ## 0.4.0
 
 - Install one-base APKM/APKS/XAPK archives through authorized ADB or Android host root.

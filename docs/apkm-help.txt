@@ -22,8 +22,8 @@ options:
   -h, --help            show this help message and exit
   --version             show program's version number and exit
   --mode {auto,adb,root}
-                        Backend; auto prefers ADB, then checks Android host
-                        root
+                        Default: adb; select root explicitly; auto permits
+                        fallback
   --serial SERIAL       ADB serial; required with multiple devices
   --json                Emit newline-delimited JSON events
   --no-progress         Show stage messages only

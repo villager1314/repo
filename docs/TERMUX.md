@@ -88,7 +88,7 @@ apkm install --download-only --output-dir "$HOME/apks" org.fdroid.fdroid
 直接安装需要以下任一后端。无 root 时先按下一节配对并连接无线 ADB：
 
 ```sh
-apkm --mode adb install org.fdroid.fdroid
+apkm install org.fdroid.fdroid
 ```
 
 已有安卓宿主 root 时：
@@ -166,8 +166,8 @@ adb pair IP:配对端口
 adb connect IP:调试端口
 adb devices
 apkm doctor
-apkg --mode adb install "$HOME/软件.apk"
-apkm --mode adb install 软件名
+apkg install "$HOME/软件.apk"
+apkm install 软件名
 ```
 
 配对码在终端交互输入，不写入 apkm 配置。
@@ -240,9 +240,11 @@ man apkg
 ```sh
 apt update
 apt install --no-install-recommends apkm
-apkg --mode adb install "$HOME/应用.apkm"
-apkg --mode adb install "$HOME/应用.apks"
+apkg install "$HOME/应用.apkm"
+apkg install "$HOME/应用.apks"
 apkg --mode root install "$HOME/应用.xapk"
 ```
 
 仍需已授权的 ADB 或真正的安卓宿主 root。OBB 不部署；临时文件自动清理、原始归档保留。单套拆分包和 universal APKS 可用；多设备变体的 bundletool APKS 应先按设备提取。详见 [归档说明](https://github.com/villager1314/repo/blob/main/docs/ARCHIVES.md)。安装前会解压归档中的 APK，需要足够临时空间；不添加 Java 或 Python 第三方依赖。
+
+0.4.1 起默认 ADB：`apkg install 路径` 和 `apkm install 软件名` 可省略 `--mode adb`。root 仍使用 `--mode root`；`--mode auto` 可显式启用自动回退。

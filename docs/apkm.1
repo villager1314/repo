@@ -1,4 +1,4 @@
-.TH APKM 1 "2026-10-15" "apkm 0.4.0" "User Commands"
+.TH APKM 1 "2026-10-15" "apkm 0.4.1" "User Commands"
 .SH NAME
 apkm \- signed Android APK repository client
 .SH SYNOPSIS
@@ -50,7 +50,8 @@ Uninstall after confirmation. Package IDs are Android package names.
 Place global options before the command.
 .TP
 .B --mode auto|adb|root
-Prefer authorized ADB in auto mode; otherwise verify local Android host root.
+ADB is the default. Use --mode root explicitly for Android host root.
+Use --mode auto to prefer ADB and allow verified host-root fallback.
 .TP
 .B --serial SERIAL
 Select an ADB device. Required when multiple devices are connected.

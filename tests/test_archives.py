@@ -130,7 +130,7 @@ elif a[0]=='shell':
 else:sys.exit(9)
 ''');adb.chmod(0o755)
   env=dict(os.environ,PATH=str(bin)+os.pathsep+os.environ['PATH'],MOCK_LOG=str(log))
-  result=subprocess.run([os.sys.executable,str(ROOT/'src/apkm.py'),'--as-apkg','--mode','adb','--json','install',str(p)],env=env,text=True,capture_output=True)
+  result=subprocess.run([os.sys.executable,str(ROOT/'src/apkm.py'),'--as-apkg','--json','install',str(p)],env=env,text=True,capture_output=True)
   self.assertEqual(result.returncode,0,result.stdout+result.stderr);events=[json.loads(line) for line in result.stdout.splitlines()];self.assertTrue(any(e['stage']=='结果' for e in events));self.assertTrue(p.exists());self.assertTrue(all(not Path(n).exists() for n in json.loads(log.read_text())[2:]))
 
  def test_unsupported_sdk(self):
