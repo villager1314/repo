@@ -159,7 +159,7 @@ python3 scripts/add_apk.py 软件名 /路径/软件.apk --key FINGERPRINT --desc
 
 脚本复制 APK 到 `site/android/apks/`，更新 revision 和 SHA256，并重新签名。
 提交更新的 site/android/ 即可部署。没有 APK 时目录含 .gitkeep。
-此添加脚本仍只处理独立 APK；客户端 0.5.0 可安装单套基础 APK＋拆分包的 APKM/APKS/XAPK。OBB 跳过并提示；bundletool 多变体 APKS 需要先按设备提取。详见 [归档安装](docs/ARCHIVES.md)。
+此添加脚本仍只处理独立 APK；客户端 0.5.0 可安装单套基础 APK＋拆分包的 APKM/APKS/XAPK。OBB 跳过并提示；bundletool 多变体 APKS 可使用 --bundletool JAR 适配器（需另装 Java）。详见 [归档安装](docs/ARCHIVES.md)。
 软件名 apkm 与 .apkm 容器格式没有关系。
 
 ## 重新构建

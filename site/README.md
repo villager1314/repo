@@ -137,7 +137,7 @@ man apkm
 man apkg
 ```
 
-Removal uses Android package IDs, requires confirmation or `--yes`, and normally deletes app data. Duplicate IDs are deduplicated, absent apps are skipped, and processing stops at the first failure. Successfully removed apps remain removed. Removal requires no repository index.
+Removal uses Android package IDs, requires confirmation or `--yes`, and normally deletes app data. Duplicate IDs are deduplicated, absent apps are skipped, and processing stops at the first failure. Successfully removed apps remain removed. Removal by Android package ID requires no repository index; friendly names use the cached catalog.
 
 Run `apkm` or `apkg` without arguments to show help. `-h` / `--help` shows help, `-v` / `--version` shows the version, and `-y` / `--yes` skips uninstall confirmation. Common global flags can appear before or after the command; use `--` for literal filenames.
 
