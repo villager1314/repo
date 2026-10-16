@@ -248,3 +248,19 @@ apkg --mode root install "$HOME/应用.xapk"
 仍需已授权的 ADB 或真正的安卓宿主 root。OBB 不部署；临时文件自动清理、原始归档保留。单套拆分包和 universal APKS 可用；多设备变体的 bundletool APKS 应先按设备提取。详见 [归档说明](https://github.com/villager1314/repo/blob/main/docs/ARCHIVES.md)。安装前会解压归档中的 APK，需要足够临时空间；不添加 Java 或 Python 第三方依赖。
 
 0.4.1 起默认 ADB：`apkg install 路径` 和 `apkm install 软件名` 可省略 `--mode adb`。root 仍使用 `--mode root`；`--mode auto` 可显式启用自动回退。
+
+## 0.5.0 常用命令
+
+```sh
+apkm show com.example.app
+apkm list --upgradable
+apkm download com.example.app
+apkm reinstall com.example.app
+apkm install "$HOME/应用.apkm"
+apkg -i "$HOME/应用.apk"
+apkg -I "$HOME/应用.apkm"
+apkm cache-info
+apkm clean --simulate
+```
+
+常用全局参数支持后置。多变体 APKS 可显式使用 --bundletool JAR，但 Java/JAR 不会默认安装；不要因此拉入不需要的大依赖。[完整命令](https://github.com/villager1314/repo/blob/main/docs/COMMANDS.md) · [四步核对](https://github.com/villager1314/repo/blob/main/docs/FOUR-STEPS.md)。

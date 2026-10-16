@@ -50,14 +50,16 @@
               repositories.
 
        [1mlist | doctor[0m
-              List Android applications or diagnose the backend.
+              List cached repository entries or  diagnose  the  backend.   Use
+              list  --installed  or  --upgradable  to  filter repository-known
+              apps; apkg list lists all installed package IDs.
 
        [1mremove PACKAGE-ID ...[0m
               Uninstall after confirmation. Package IDs  are  Android  package
               names.
 
 [1mGLOBAL OPTIONS[0m
-       Place global options before the command.
+       Common global options may appear before or after the command.
 
        [1m--mode auto|adb|root[0m
               ADB  is the default. Use --mode root explicitly for Android host
@@ -137,4 +139,22 @@
        --version  for the version, and -y or --yes to skip uninstall confirma‐
        tion.
 
-apkm 0.4.2                        2026-10-16                           [4mAPKM[24m(1)
+
+[1mADDITIONAL COMMANDS[0m
+       show aliases info. download NAME downloads only; reinstall NAME permits
+       equal versionCode without downgrading.  install  PATH  delegates  local
+       files  to  apkg.  versions NAME lists cached variants; policy NAME dis‐
+       plays cached candidates.  --source NAME selects one configured  source;
+       NAME=CODE  selects a numeric versionCode.  list accepts a glob pattern,
+       --installed and --upgradable.  cache-info reports managed  download/in‐
+       dex  sizes.  clean  removes  managed downloads only, retaining indexes,
+       user filenames, symlinks and custom output directories.  clean requires
+       confirmation or -y unless  empty.   hold/unhold/showhold  manage  holds
+       scoped to the ADB connection serial or local root connection; these af‐
+       fect  upgrade  only.  Wireless  port  changes change scope.  -s/--simu‐
+       late/--dry-run previews install, upgrade, remove or clean without down‐
+       loads or device modifications. Local-file previews do not perform  tar‐
+       get  split selection.  Other mutating commands reject simulation. Plans
+       are per item, not atomic transactions.
+
+apkm 0.5.0                        2026-10-16                           [4mAPKM[24m(1)

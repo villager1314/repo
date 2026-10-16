@@ -1,20 +1,32 @@
-usage: apkm [-h] [-v] [--mode {auto,adb,root}] [--serial SERIAL] [--json]
-            [--no-progress] [-y]
-            {moo,install,search,update,upgrade,source,info,list,remove,doctor}
+usage: apkm [-h] [-v] [--mode {auto,adb,root}] [--bundletool JAR]
+            [--serial SERIAL] [--json] [--no-progress] [-y] [-s]
+            [--source TARGET_SOURCE]
+            {moo,install,reinstall,download,search,update,upgrade,source,info,show,list,versions,policy,hold,unhold,showhold,cache-info,clean,file-info,contents,remove,doctor}
             ...
 
 Signed APK repository client (Linux x86-64 / ARM64)
 
 positional arguments:
-  {moo,install,search,update,upgrade,source,info,list,remove,doctor}
+  {moo,install,reinstall,download,search,update,upgrade,source,info,show,list,versions,policy,hold,unhold,showhold,cache-info,clean,file-info,contents,remove,doctor}
     moo                 Niu Lai terminal easter egg
     install             Download and install repository APKs
+    reinstall           Reinstall from repositories
+    download            Download and verify only
     search              Search cached repositories
     update              Download, verify and refresh local indexes
     upgrade             Upgrade installed applications found in repositories
     source              Manage repositories
-    info                Inspect a repository application
-    list                List applications on the device
+    info (show)         Inspect a repository application
+    list                List packages
+    versions            List cached versionCode variants
+    policy              Show cached candidate/source without a device
+    hold                Manage target-connection-scoped APKM upgrade holds
+    unhold              Manage target-connection-scoped APKM upgrade holds
+    showhold            Manage target-connection-scoped APKM upgrade holds
+    cache-info          Show download/index cache usage
+    clean               Remove managed downloads, retaining indexes
+    file-info           Inspect local APK/archive metadata without a device
+    contents            List ZIP entries without installing
     remove              Uninstall Android applications and their data
     doctor              Check device, permissions and environment
 
@@ -24,9 +36,15 @@ options:
   --mode {auto,adb,root}
                         Default: adb; select root explicitly; auto permits
                         fallback
+  --bundletool JAR      Optional official bundletool JAR for multi-variant
+                        APKS; requires Java
   --serial SERIAL       ADB serial; required with multiple devices
   --json                Emit newline-delimited JSON events
   --no-progress         Show stage messages only
   -y, --yes             Skip uninstall confirmation, not Android authorization
+  -s, --simulate, --dry-run
+                        Preview without downloads or device changes
+  --source TARGET_SOURCE
+                        Choose one configured repository explicitly
 
 This APKM has Niu Lai Powers.

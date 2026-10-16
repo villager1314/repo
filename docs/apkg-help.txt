@@ -1,14 +1,16 @@
-usage: apkg [-h] [-v] [--mode {auto,adb,root}] [--serial SERIAL] [--json]
-            [--no-progress] [-y]
-            {install,info,list,remove,doctor} ...
+usage: apkg [-h] [-v] [--mode {auto,adb,root}] [--bundletool JAR]
+            [--serial SERIAL] [--json] [--no-progress] [-y] [--simulate]
+            {install,info,status,list,file-info,contents,remove,doctor} ...
 
 Local Android APK installation backend
 
 positional arguments:
-  {install,info,list,remove,doctor}
+  {install,info,status,list,file-info,contents,remove,doctor}
     install             Install local APKs
-    info                Inspect an installed Android application
-    list                List applications on the device
+    info (status)       Inspect an installed Android application
+    list                List packages
+    file-info           Inspect local APK/archive metadata without a device
+    contents            List ZIP entries without installing
     remove              Uninstall Android applications and their data
     doctor              Check device, permissions and environment
 
@@ -18,7 +20,14 @@ options:
   --mode {auto,adb,root}
                         Default: adb; select root explicitly; auto permits
                         fallback
+  --bundletool JAR      Optional official bundletool JAR for multi-variant
+                        APKS; requires Java
   --serial SERIAL       ADB serial; required with multiple devices
   --json                Emit newline-delimited JSON events
   --no-progress         Show stage messages only
   -y, --yes             Skip uninstall confirmation, not Android authorization
+  --simulate, --dry-run
+                        Preview without downloads or device changes
+
+DPKG-style: -i/--install, -r/--remove, -l/--list, -s/--status, -I/--info
+(local file), -c/--contents. Help: -h / -?.

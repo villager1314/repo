@@ -1,5 +1,4 @@
-usage: apkm install [-h] [--keep-apk] [--download-only]
-                    [--output-dir OUTPUT_DIR]
+usage: apkm install [-h] [--keep-apk] [-d] [--output-dir OUTPUT_DIR]
                     names [names ...]
 
 positional arguments:
@@ -9,6 +8,6 @@ options:
   -h, --help            show this help message and exit
   --keep-apk            Keep APKs after successful installation; otherwise
                         delete after version confirmation
-  --download-only       Download and verify only
+  -d, --download-only   Download and verify only
   --output-dir OUTPUT_DIR
                         Download directory

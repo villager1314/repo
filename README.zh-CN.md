@@ -8,7 +8,7 @@ APKM 是 APK 源客户端，APKG 是安装后端。这里的 APKM 与 `.apkm` �
 
 [![CI](https://github.com/villager1314/repo/actions/workflows/ci.yml/badge.svg)](https://github.com/villager1314/repo/actions/workflows/ci.yml)
 [![Pages](https://github.com/villager1314/repo/actions/workflows/pages.yml/badge.svg)](https://github.com/villager1314/repo/actions/workflows/pages.yml)
-[![Version](https://img.shields.io/badge/version-0.4.2-blue)](https://github.com/villager1314/repo/releases)
+[![Version](https://img.shields.io/badge/version-0.5.0-blue)](https://github.com/villager1314/repo/releases)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
 从签名 APK 软件源下载应用，通过 ADB 或安卓宿主 root 安装。
@@ -84,7 +84,7 @@ sudo apt update
 sudo apt install --no-install-recommends apkm
 ```
 
-也可以先安装随附的本地 deb：`sudo apt install ./apkm_0.4.2-1_all.deb`。
+也可以先安装随附的本地 deb：`sudo apt install ./apkm_0.5.0-1_all.deb`。
 包包含 apkm、apkg、两份 man 手册和 APK 源公钥。
 
 ## Arch / Arch Linux ARM 安装
@@ -132,7 +132,7 @@ man apkg
 
 默认使用 ADB，直接 `apkg install 路径`；安卓 root 显式指定 `--mode root`。需要自动回退时使用 `--mode auto`。
 
-全局参数放在命令前：
+常用全局参数可放在子命令前或后；`--` 后保留字面参数：
 
 ```sh
 apkm --serial DEVICE install 软件名
@@ -159,7 +159,7 @@ python3 scripts/add_apk.py 软件名 /路径/软件.apk --key FINGERPRINT --desc
 
 脚本复制 APK 到 `site/android/apks/`，更新 revision 和 SHA256，并重新签名。
 提交更新的 site/android/ 即可部署。没有 APK 时目录含 .gitkeep。
-此添加脚本仍只处理独立 APK；客户端 0.4.2 可安装单套基础 APK＋拆分包的 APKM/APKS/XAPK。OBB 跳过并提示；bundletool 多变体 APKS 需要先按设备提取。详见 [归档安装](docs/ARCHIVES.md)。
+此添加脚本仍只处理独立 APK；客户端 0.5.0 可安装单套基础 APK＋拆分包的 APKM/APKS/XAPK。OBB 跳过并提示；bundletool 多变体 APKS 需要先按设备提取。详见 [归档安装](docs/ARCHIVES.md)。
 软件名 apkm 与 .apkm 容器格式没有关系。
 
 ## 重新构建
@@ -225,7 +225,7 @@ LANG=C apkm --help
 - [版本历史](CHANGELOG.md) · [贡献指南](CONTRIBUTING.md) · [验证范围](VALIDATION.md)
 - [发布与下载](https://github.com/villager1314/repo/releases)
 
-## APKM / APKS / XAPK 安装（0.4.2）
+## APKM / APKS / XAPK 安装（0.5.0）
 
 ```sh
 apkg install ./应用.apkm
@@ -235,6 +235,14 @@ apkg --mode root install ./应用.xapk
 
 APK 集合一次性提交，Android 验证签名。ABI 依据目标设备选择、密度取最接近的一份、语言包保留；未知配置拒绝安装。临时解压文件始终清理，用户原始归档保留。含 OBB 时明确提示未安装扩展数据；APK 成功不代表游戏资源齐全。使用范围和限制见 [归档说明](docs/ARCHIVES.md)。
 
-## 帮助和简写（0.4.2）
+## 帮助和简写（0.5.0）
 
-直接运行 `apkm` 或 `apkg` 显示帮助；`-h` / `--help` 查看帮助，`-v` / `--version` 查看版本，`-y` / `--yes` 跳过卸载确认。全局参数放在子命令前，例如 `apkg -y remove com.example.app`。
+直接运行 `apkm` 或 `apkg` 显示帮助；`-h` / `--help` 查看帮助，`-v` / `--version` 查看版本，`-y` / `--yes` 跳过卸载确认。全局参数可前置或后置，例如 `apkg -y remove com.example.app`。
+
+## 四步改进（0.5.0）
+
+新增 show/reinstall/download、本地路径安装、APKG 的 -i/-r/-l/-s/-I/-c、缓存列表与已安装/可升级筛选、本地包信息、缓存统计和限定清理、预演、选源、按 versionCode 选版本、连接范围升级锁定，以及可选 bundletool 适配器。
+
+`apkm list` 现在列缓存仓库条目；全部设备应用用 `apkg list`。`--installed/--upgradable` 仅覆盖仓库可识别包。APKM `-s` 是预演，APKG `-s` 是状态查询。锁定按 ADB 连接标识保存，无线端口变化不会沿用。
+
+[详细命令](docs/COMMANDS.md) · [逐项可行性与四步结果](docs/FOUR-STEPS.md)。未实现的建议均有标注，不能视为完整 APT/DPKG 兼容。

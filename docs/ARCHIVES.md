@@ -1,4 +1,4 @@
-# APKM / APKS / XAPK archives (0.4.0)
+# APKM / APKS / XAPK archives (0.5.0)
 
 [English README](../README.md) · [中文 README](../README.zh-CN.md)
 
@@ -10,7 +10,7 @@ apkg --serial DEVICE install ./application.apks
 apkg --mode root install ./application.xapk
 ```
 
-ADB is the default: `apkg install PATH` is sufficient. Android host root requires `--mode root`; `--mode auto` explicitly enables fallback. Global options precede the command. File arguments are local to the machine running APKG, including when ADB targets another device. Local archives are retained. Temporary extracted APKs are deleted after success, failure or interruption.
+ADB is the default: `apkg install PATH` is sufficient. Android host root requires `--mode root`; `--mode auto` explicitly enables fallback. Common global options may precede or follow the command. File arguments are local to the machine running APKG, including when ADB targets another device. Local archives are retained. Temporary extracted APKs are deleted after success, failure or interruption.
 
 ## Supported layouts
 
@@ -20,7 +20,7 @@ ADB is the default: `apkg install PATH` is sufficient. Android host root require
 | XAPK containing one standalone APK | Supported |
 | XAPK with OBB files | Install APKs only; emit an explicit OBB-not-installed event |
 | bundletool universal APKS, one universal.apk plus toc.pb | Supported |
-| bundletool multi-device/multi-variant toc.pb APKS | Rejected; use bundletool extract-apks with a device spec first |
+| bundletool multi-device/multi-variant toc.pb APKS | Use --bundletool JAR with separately installed Java; otherwise rejected |
 | Multiple standalone base variants, encrypted archives, unknown configuration targeting | Rejected |
 | AAB, asset packs / Play Asset Delivery and installing OBB data | Not implemented |
 
@@ -62,4 +62,14 @@ Official bundletool reference: https://developer.android.com/tools/bundletool
 
 ## 中文速览
 
-本版安装归档中的 APK，不安装 OBB。ADB 和安卓 root 都支持，原始本地文件保留，临时解压自动清理。默认选择目标设备兼容 ABI、最接近密度并保留语言包。要求单个基础 APK，包名版本一致，最终签名由 Android 验证。标准 bundletool 多设备变体 APKS 暂不直接解析 toc.pb；请先按设备提取，或使用 universal APKS。没有新增第三方运行依赖，仍需实机验证。
+本版安装归档中的 APK，不安装 OBB。ADB 和安卓 root 都支持，原始本地文件保留，临时解压自动清理。默认选择目标设备兼容 ABI、最接近密度并保留语言包。要求单个基础 APK，包名版本一致，最终签名由 Android 验证。标准 bundletool 多设备变体 APKS 可使用可选 --bundletool JAR 适配器；不配置时需先提取。没有新增第三方运行依赖，仍需实机验证。
+
+## Optional bundletool adapter (0.5.0)
+
+```sh
+apkg install ./application.apks --bundletool /trusted/path/bundletool-all.jar
+```
+
+Java and the official JAR are optional, user-supplied dependencies. Device API/ABI/density/locales form a temporary spec. The tool extracts a target set, after which APKG checks metadata and installs with the selected backend. This was exercised with official bundletool 1.18.3 and a minimal valid protobuf toc archive containing an actual F-Droid APK; Android installation remained mocked. Existing archive size/entry constraints still apply, so very large all-device archives may be rejected. No asset-pack or OBB deployment is added.
+
+多变体 APKS 可显式传入 `--bundletool 官方JAR路径`；Java/JAR 不默认安装，不自动下载。详情见 [命令指南](COMMANDS.md)。

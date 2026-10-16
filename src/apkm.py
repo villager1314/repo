@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-"""APKM/APKG 0.4.2: signed APK repository client and Android install backend."""
+"""APKM/APKG 0.5.0: signed APK repository client and Android install backend."""
 import argparse
 import struct
 import stat
 import xml.etree.ElementTree as ET
 import hashlib
+import fnmatch
 import json
 import os
 from pathlib import Path
@@ -19,7 +20,7 @@ import urllib.parse
 import urllib.request
 import zipfile
 
-VERSION = '0.4.2'
+VERSION = '0.5.0'
 BASE_URL = 'https://villager1314.github.io/repo'
 CONFIG = Path(os.environ.get('XDG_CONFIG_HOME', str(Path.home()/'.config'))) / 'apkm'
 CACHE = Path(os.environ.get('XDG_CACHE_HOME', str(Path.home()/'.cache'))) / 'apkm'
@@ -174,7 +175,9 @@ def select_variant(package, sdk=None, abis=None):
             continue
         if abis is not None and 'any' not in v['abis'] and not set(abis) & set(v['abis']):
             continue
-        return dict(v, source_url=package['source_url'])
+        result=dict(v,source_url=package['source_url'])
+        if 'source_name' in package:result['source_name']=package['source_name']
+        return result
     raise Failure(f'{package["name"]} 没有兼容设备的稳定 APK', 5)
 
 
@@ -208,12 +211,14 @@ def refresh(name, src, out):
     out.event('源', f'{name}：签名验证通过，{len(current["packages"])} 个软件')
 
 
-def catalog(out):
+def catalog(out,only=None):
     result = {}
     configured = sources()
     if not configured:
         raise Failure('尚未添加 APK 源。运行 apkm source add --help 查看方法。',2)
+    if only is not None and only not in configured:raise Failure('软件源不存在：'+only,2)
     for name, src in configured.items():
+        if only is not None and name!=only:continue
         target = CONFIG/'indexes'/f'{name}.json'
         cached = read_json(target)
         if cached is None:
@@ -226,7 +231,7 @@ def catalog(out):
         for p in cached['packages']:
             if p['name'] in result:
                 raise Failure(f'多个源包含同名软件 {p["name"]}，请保留一个对应源',2)
-            result[p['name']] = dict(p, source_url=src['url'])
+            result[p['name']] = dict(p, source_url=src['url'],source_name=name)
     return result
 
 class Backend:
@@ -378,7 +383,7 @@ DENSITY_SPLITS = {'ldpi':120, 'mdpi':160, 'tvdpi':213, 'hdpi':240, 'xhdpi':320, 
 ANDROID_NS = 'http://schemas.android.com/apk/res/android'
 
 
-def archive_entries(z):
+def archive_entries(z,allow_bundletool=False):
     infos=z.infolist()
     if len(infos)>2048: raise Failure('归档条目过多',4)
     seen=set(); total=0
@@ -397,7 +402,7 @@ def archive_entries(z):
     if any(Path(name).name=='toc.pb' for name in seen):
         # Universal bundletool sets need no device targeting. Multi-variant protobuf
         # sets must be selected by bundletool, not guessed from filenames.
-        if len(apks)!=1 or Path(apks[0].filename).name!='universal.apk':
+        if not allow_bundletool and (len(apks)!=1 or Path(apks[0].filename).name!='universal.apk'):
             raise Failure('此 APKS 含 bundletool 多变体 toc.pb；请先用 bundletool extract-apks 按设备提取，或提供 universal APKS',4)
     return apks, any(i.filename.lower().endswith('.obb') for i in infos)
 
@@ -489,7 +494,7 @@ def apk_metadata(path):
                     sdk=int(value)
             dependencies=[android(a,'name') for t,a in elements if t=='uses-split']
             if not re.fullmatch(r'[A-Za-z0-9_.-]*',split) or not re.fullmatch(r'[A-Za-z0-9_.-]*',target): raise Failure('APK split 名称无效',4)
-            return {'path':path,'package':package,'version':int(version)+(int(major)<<32),'split':split,'target':target,'native':native,'min_sdk':sdk,'dependencies':dependencies}
+            return {'path':path,'package':package,'version':int(version)+(int(major)<<32),'version_name':android(root,'versionName'),'split':split,'target':target,'native':native,'min_sdk':sdk,'dependencies':dependencies}
     except (zipfile.BadZipFile,KeyError,struct.error,UnicodeError,ET.ParseError) as e:
         raise Failure(f'无法解析 APK 元数据：{e}',4)
 
@@ -538,22 +543,53 @@ def select_splits(items,backend):
     return [base]+sorted((p for p in selected if p is not base),key=lambda p:p['split'])
 
 
-def install_archive(path,backend,out):
+def extract_with_bundletool(path,backend,temp,jar):
+    jar=Path(jar).expanduser().resolve()
+    java=shutil.which('java')
+    if not java or not jar.is_file():raise Failure('--bundletool 需要已安装 Java 和可读的官方 JAR 文件',2)
+    sdk,abis=backend.device_info()
+    text=backend.shell(['wm','density']).stdout
+    densities=re.findall(r'(?:Physical|Override) density:\s*(\d+)',text)
+    if not densities or int(densities[-1])<=0:raise Failure('bundletool 需要目标设备屏幕密度',3)
+    locales=backend.shell(['getprop','persist.sys.locales']).stdout.strip()
+    if not locales:locales=backend.shell(['getprop','persist.sys.locale']).stdout.strip()
+    if not locales:locales=backend.shell(['getprop','ro.product.locale']).stdout.strip()
+    if not locales:raise Failure('bundletool 需要目标设备语言',3)
+    spec=Path(temp)/'device.json'
+    spec.write_text(json.dumps(dict(sdkVersion=sdk,supportedAbis=abis,screenDensity=int(densities[-1]),supportedLocales=[v.replace('_','-') for v in locales.split(',') if v])))
+    target=Path(temp)/'selected'
+    result=run([java,'-jar',str(jar),'extract-apks','--apks='+str(path.resolve()),'--device-spec='+str(spec),'--output-dir='+str(target)],check=False,timeout=180)
+    if result.returncode:raise Failure('bundletool 提取失败：'+result.stderr+result.stdout,4)
+    files=sorted(target.rglob('*.apk'))
+    if not files or len(files)>512:raise Failure('bundletool 输出 APK 数量无效',4)
+    size=0
+    for file in files:
+        if file.is_symlink() or target.resolve() not in file.resolve().parents:raise Failure('bundletool 输出路径无效',4)
+        n=file.stat().st_size;size+=n
+        if n>2*1024**3 or size>MAX_ARCHIVE_BYTES:raise Failure('bundletool 输出超过大小限制',4)
+    return files
+
+
+def install_archive(path,backend,out,bundletool=None):
     try:
         with zipfile.ZipFile(path) as z, tempfile.TemporaryDirectory(prefix='apkm-splits-') as temp:
-            entries,obb=archive_entries(z)
+            entries,obb=archive_entries(z,allow_bundletool=bool(bundletool))
             if obb: out.event('OBB 未安装','归档含 OBB；本版本仅安装 APK，游戏可能仍需扩展数据',obb_installed=False)
-            items=[]
-            for i,entry in enumerate(entries):
-                target=Path(temp)/f'{i}.apk'
-                with z.open(entry) as source, target.open('wb') as dest:
-                    copied=0
-                    for chunk in iter(lambda:source.read(128*1024),b''):
-                        copied+=len(chunk)
-                        if copied>entry.file_size: raise Failure('归档解压大小不符',4)
-                        dest.write(chunk)
-                if copied!=entry.file_size: raise Failure('归档解压文件截断',4)
-                items.append(apk_metadata(target))
+            complex_set=any(Path(i.filename).name=='toc.pb' for i in z.infolist()) and not (len(entries)==1 and Path(entries[0].filename).name=='universal.apk')
+            if complex_set:
+                items=[apk_metadata(file) for file in extract_with_bundletool(path,backend,temp,bundletool)]
+            else:
+                items=[]
+                for i,entry in enumerate(entries):
+                    target=Path(temp)/f'{i}.apk'
+                    with z.open(entry) as source, target.open('wb') as dest:
+                        copied=0
+                        for chunk in iter(lambda:source.read(128*1024),b''):
+                            copied+=len(chunk)
+                            if copied>entry.file_size: raise Failure('归档解压大小不符',4)
+                            dest.write(chunk)
+                    if copied!=entry.file_size: raise Failure('归档解压文件截断',4)
+                    items.append(apk_metadata(target))
             selected=select_splits(items,backend)
             out.event('拆分选择',f'{len(selected)}/{len(items)} APK',splits=[p['split'] or 'base' for p in selected])
             backend.install_set([p['path'] for p in selected])
@@ -567,7 +603,7 @@ def check_installable(path,format='apk'):
     if format=='apk': return check_apk(path)
     if format not in ARCHIVE_FORMATS: raise Failure('不支持的 APK 归档格式',4)
     try:
-        with zipfile.ZipFile(path) as z: archive_entries(z)
+        with zipfile.ZipFile(path) as z: archive_entries(z,allow_bundletool=True)
     except zipfile.BadZipFile as e: raise Failure(f'无效 APK 归档：{e}',4)
 
 
@@ -627,17 +663,112 @@ NIU_LAI_ART = '          /)             (\\\n         / |             | \\\n    
 MAMA_ART = '       /\\\n      /  \\               /|\n      |   \\             / |\n       \\   \\____________/  |\n    ___/       ____       \\__\n   /   \\      /    \\   __   \\\n   \\__  |        (o)   (o)  |\n      \\ |             ______/\n       \\|           /       \\\n        |          /   o     |\n        |         |          |\n        |          \\________/\n         \\          \\______/\n          \\_______________/\n           /          \\\n          /            \\'
 
 
+def resolve_package(packages,request):
+    name,separator,version=request.partition('=')
+    if name not in packages:raise Failure('源中没有 '+name,2)
+    package=packages[name]
+    if separator:
+        if not version.isdigit():raise Failure('版本必须是数字 versionCode',2)
+        matches=[v for v in package.get('variants',[package]) if v['version_code']==int(version)]
+        if not matches:raise Failure('源中没有指定 versionCode：'+request,2)
+        package=dict(package,**matches[0]);package['variants']=matches
+    return package
+
+
+def target_key(backend):
+    return 'adb:'+backend.prefix[2] if backend.mode=='adb' else 'root:local'
+
+
+def holds_state():
+    data=read_json(CONFIG/'holds.json',{})
+    if not isinstance(data,dict) or any(not isinstance(k,str) or not isinstance(v,list) or any(not isinstance(p,str) for p in v) for k,v in data.items()):raise Failure('holds.json 配置格式无效',2)
+    return data
+
+def target_holds(backend):
+    return holds_state().get(target_key(backend),[])
+
+
+def local_file_info(path):
+    path=Path(path).expanduser()
+    if path.suffix.lower().lstrip('.') not in ARCHIVE_FORMATS:
+        info=apk_metadata(path)
+        return dict(info,path=str(path),native=sorted(info['native']),format='apk')
+    with zipfile.ZipFile(path) as z,tempfile.TemporaryDirectory(prefix='apkm-info-') as temp:
+        entries,obb=archive_entries(z,allow_bundletool=True);items=[]
+        for i,entry in enumerate(entries):
+            target=Path(temp)/f'{i}.apk'
+            with z.open(entry) as source,target.open('wb') as dest:shutil.copyfileobj(source,dest,128*1024)
+            item=apk_metadata(target);items.append(dict(item,path=entry.filename,native=sorted(item['native'])))
+        return dict(path=str(path),format=path.suffix[1:].lower(),apks=items,obb_present=obb)
+
+
+def cache_files():
+    folder=CACHE/'apks'
+    if not folder.is_dir() or folder.is_symlink():return []
+    pattern=r'[a-zA-Z0-9][a-zA-Z0-9._+-]*-[0-9]+-[0-9a-f]{12}\.(?:apk|apkm|apks|xapk)'
+    return [p for p in folder.iterdir() if not p.is_symlink() and p.is_file() and re.fullmatch(pattern,p.name)]
+
+
+def cache_action(args,out):
+    files=cache_files();size=sum(p.stat().st_size for p in files)
+    indexes=CONFIG/'indexes'
+    index_size=sum(p.stat().st_size for p in indexes.glob('*.json') if p.is_file() and not p.is_symlink())
+    out.event('缓存',f'{len(files)} downloads, {size} bytes; indexes {index_size} bytes',downloads=len(files),bytes=size,index_bytes=index_size)
+    if args.command!='clean':return
+    if not files:return
+    if args.simulate:
+        out.event('计划',f'Delete {len(files)} managed downloads ({size} bytes); indexes retained');return
+    if not args.yes:
+        if args.json or not sys.stdin.isatty():raise Failure('清理需要 -y 或交互确认',2)
+        if input(f'Delete {len(files)} cached downloads ({size} bytes)? Type yes: ')!='yes':raise Failure('Cancelled',1)
+    for path in files:path.unlink()
+    out.event('清理',f'Deleted {len(files)} cached downloads; indexes retained',bytes=size)
+
+
+class CommandParser(argparse.ArgumentParser):
+    def __init__(self,*args,**kwargs):
+        kwargs.setdefault('allow_abbrev',False)
+        super().__init__(*args,**kwargs)
+        if kwargs.get('add_help',True): self.add_argument('-?',action='help',help=argparse.SUPPRESS)
+
+
+def normalize_cli(argv,program):
+    aliases={'-i':'install','--install':'install','-r':'remove','--remove':'remove','-l':'list','--list':'list','-s':'info','--status':'info','-I':'file-info','--info':'file-info','-c':'contents','--contents':'contents'} if program=='apkg' else {}
+    booleans={'-y','--yes','--json','--no-progress','-v','--version','--simulate','--dry-run'}
+    if program=='apkm':booleans.add('-s')
+    valued={'--mode','--serial','--bundletool'}
+    if program=='apkm': valued.add('--source')
+    front=[]; rest=[]; trailing=[]; command=False; i=0
+    while i<len(argv):
+        token=argv[i]
+        if token=='--': rest+=trailing;trailing=[];rest+=argv[i:];break
+        if token in ('-d','--download-only') and program=='apkm':trailing.append(token)
+        elif token in booleans: front.append(token)
+        elif token.split('=',1)[0] in valued:
+            front.append(token)
+            if '=' not in token and i+1<len(argv):i+=1;front.append(argv[i])
+        else:
+            if not command and token in aliases:token=aliases[token]
+            rest.append(token)
+            if not token.startswith('-'):command=True
+        i+=1
+    return front+rest+trailing
+
+
 def parser(program):
     apkg=program=='apkg'
     language=os.environ.get('LC_ALL') or os.environ.get('LC_MESSAGES') or os.environ.get('LANG','en')
     def tr(zh,en): return zh if language.lower().startswith('zh') else en
-    p=argparse.ArgumentParser(prog=program,epilog=None if apkg else 'This APKM has Niu Lai Powers.',description=tr('安卓本地 APK 安装后端','Local Android APK installation backend') if apkg else tr('签名 APK 软件源客户端（Linux x86-64 / ARM64）','Signed APK repository client (Linux x86-64 / ARM64)'))
+    p=CommandParser(prog=program,epilog='DPKG-style: -i/--install, -r/--remove, -l/--list, -s/--status, -I/--info (local file), -c/--contents. Help: -h / -?.' if apkg else 'This APKM has Niu Lai Powers.',description=tr('安卓本地 APK 安装后端','Local Android APK installation backend') if apkg else tr('签名 APK 软件源客户端（Linux x86-64 / ARM64）','Signed APK repository client (Linux x86-64 / ARM64)'))
     p.add_argument('-v','--version',action='version',version=f'{program} {VERSION}')
     p.add_argument('--mode',choices=['auto','adb','root'],default='adb',help=tr('默认 adb；root 显式指定；auto 可自动回退','Default: adb; select root explicitly; auto permits fallback'))
+    p.add_argument('--bundletool',metavar='JAR',help='Optional official bundletool JAR for multi-variant APKS; requires Java')
     p.add_argument('--serial',help=tr('ADB 设备序列号；多个设备时必须指定','ADB serial; required with multiple devices'))
     p.add_argument('--json',action='store_true',help=tr('逐行 JSON 事件，供其他程序读取','Emit newline-delimited JSON events'))
     p.add_argument('--no-progress',action='store_true',help=tr('只显示阶段日志','Show stage messages only'))
     p.add_argument('-y','--yes',action='store_true',help=tr('跳过卸载确认，不绕过安卓授权','Skip uninstall confirmation, not Android authorization'))
+    p.add_argument(*(['-s'] if not apkg else [])+['--simulate','--dry-run'],action='store_true',help=tr('只预演，不下载或修改设备','Preview without downloads or device changes'))
+    if not apkg:p.add_argument('--source',dest='target_source',help='Choose one configured repository explicitly')
     s=p.add_subparsers(dest='command',required=True)
     if not apkg:
         moo=s.add_parser('moo',help=tr('牛来字符画彩蛋','Niu Lai terminal easter egg'))
@@ -646,9 +777,15 @@ def parser(program):
     ins.add_argument('names',nargs='+',help=tr('本地 APK/APKM/APKS/XAPK 路径','Local APK/APKM/APKS/XAPK paths') if apkg else tr('软件名','Application names'))
     if not apkg:
         ins.add_argument('--keep-apk',action='store_true',help=tr('安装成功后保留下载的 APK；默认核对安装版本后删除','Keep APKs after successful installation; otherwise delete after version confirmation'))
-        ins.add_argument('--download-only',action='store_true',help=tr('只下载并校验','Download and verify only'))
+        ins.add_argument('-d','--download-only',action='store_true',help=tr('只下载并校验','Download and verify only'))
         ins.add_argument('--output-dir',help=tr('下载目录','Download directory'))
-        search=s.add_parser('search',help=tr('搜索软件源','Search cached repositories')); search.add_argument('keyword')
+        for command in ['reinstall','download']:
+            extra=s.add_parser(command,help=tr('重新安装' if command=='reinstall' else '只下载并校验','Reinstall from repositories' if command=='reinstall' else 'Download and verify only'))
+            extra.add_argument('names',nargs='+')
+            extra.add_argument('--keep-apk',action='store_true')
+            extra.add_argument('-d','--download-only',action='store_true',default=command=='download')
+            extra.add_argument('--output-dir')
+        search=s.add_parser('search',help=tr('搜索软件源','Search cached repositories')); search.add_argument('keyword',nargs='+'); search.add_argument('--names-only',action='store_true');search.add_argument('--exact',action='store_true')
         update=s.add_parser('update',help=tr('下载、验证签名并刷新本地索引','Download, verify and refresh local indexes')); update.add_argument('names',nargs='*',help=tr('指定源名；省略则刷新所有源','Source names; omit to update all sources'))
         upgrade=s.add_parser('upgrade',help=tr('更新源中可识别的应用','Upgrade installed applications found in repositories')); upgrade.add_argument('names',nargs='*'); upgrade.add_argument('--keep-apk',action='store_true',help=tr('更新成功后保留 APK','Keep APKs after successful upgrades')); upgrade.set_defaults(download_only=False,output_dir=None)
         source=s.add_parser('source',help=tr('管理软件源','Manage repositories')); sub=source.add_subparsers(dest='source_command',required=True)
@@ -656,8 +793,27 @@ def parser(program):
         add=sub.add_parser('add'); add.add_argument('name'); add.add_argument('url'); add.add_argument('--type',choices=['apkm','fdroid'],default='apkm',help=tr('源索引格式','Repository index format')); add.add_argument('--keyring',help=tr('事先可信的 GPG 二进制公钥环路径','Previously trusted binary GPG keyring path'))
         change=sub.add_parser('set-url',help=tr('更换镜像并验证索引，保留可信公钥及回退检查','Verify and switch mirrors, preserving trust and rollback checks')); change.add_argument('name'); change.add_argument('url')
         remove=sub.add_parser('remove');remove.add_argument('name')
-    info=s.add_parser('info',help=tr('查询安卓应用','Inspect an installed Android application') if apkg else tr('查询源中的软件','Inspect a repository application'));info.add_argument('name')
-    s.add_parser('list',help=tr('列出设备上的应用','List applications on the device'))
+    info=s.add_parser('info',aliases=['status'] if apkg else ['show'],help=tr('查询安卓应用','Inspect an installed Android application') if apkg else tr('查询源中的软件','Inspect a repository application'));info.add_argument('name')
+    listing=s.add_parser('list',help=tr('列出软件包','List packages'))
+    listing.add_argument('pattern',nargs='?',default='*')
+    if not apkg:
+        listing.add_argument('--installed',action='store_true')
+        listing.add_argument('--upgradable',action='store_true')
+        versions=s.add_parser('versions',help='List cached versionCode variants');versions.add_argument('name')
+        policy=s.add_parser('policy',help='Show cached candidate/source without a device');policy.add_argument('name')
+        for verb in ['hold','unhold','showhold']:
+            hold=s.add_parser(verb,help='Manage target-connection-scoped APKM upgrade holds')
+            if verb!='showhold':hold.add_argument('names',nargs='+',help='Android package IDs')
+        s.add_parser('cache-info',help='Show download/index cache usage')
+        s.add_parser('clean',help='Remove managed downloads, retaining indexes')
+    else:
+        kind=listing.add_mutually_exclusive_group()
+        kind.add_argument('--system',action='store_true')
+        kind.add_argument('--user-apps',action='store_true')
+    local=s.add_parser('file-info',help='Inspect local APK/archive metadata without a device')
+    local.add_argument('path')
+    contents=s.add_parser('contents',help='List ZIP entries without installing')
+    contents.add_argument('path')
     rem=s.add_parser('remove',help=tr('卸载安卓应用','Uninstall Android applications and their data')); rem.add_argument('names',nargs='+',help=tr('安卓包名','Android package IDs'))
     s.add_parser('doctor',help=tr('检查设备、权限及环境','Check device, permissions and environment'))
     return p
@@ -668,6 +824,7 @@ def invoke_apkg(path,args,out,operation="install"):
     cmd=[executable] if executable else [sys.executable,str(Path(__file__).resolve()),'--as-apkg']
     cmd+=['--mode',args.mode,'--json']
     if args.serial:cmd+=['--serial',args.serial]
+    if getattr(args,'bundletool',None):cmd+=['--bundletool',args.bundletool]
     if operation=='remove': cmd+=['--yes','remove']+list(path)
     else: cmd+=['install',str(path)]
     # Read events live; do not buffer all installation output until completion.
@@ -693,8 +850,62 @@ def main(argv=None,program=None):
     if not argv:
         command_parser.print_help()
         return 0
-    args=command_parser.parse_args(argv);out=Output(args)
+    argv=normalize_cli(argv,program)
+    args=command_parser.parse_args(argv)
+    args.reinstall=args.command=='reinstall'
+    if args.command in ('show','status'):args.command='info'
+    if args.command in ('reinstall','download'):args.command='install'
+    out=Output(args)
     try:
+        if args.simulate and args.command not in ('install','upgrade','remove','clean'):raise Failure('--simulate 仅支持 install/reinstall/download/upgrade/remove/clean',2)
+        if program=='apkm' and args.target_source and args.command not in ('search','info','install','upgrade','list','versions','policy','remove'):raise Failure('--source 不适用于此命令',2)
+        if program=='apkm' and args.command in ('hold','unhold','showhold'):
+            backend=Backend(args,out);key=target_key(backend);data=holds_state();held=set(data.get(key,[]))
+            if args.command!='showhold':
+                for name in args.names:
+                    if not re.fullmatch(r'[A-Za-z][A-Za-z0-9_]*(?:\.[A-Za-z][A-Za-z0-9_]*)+',name):raise Failure('需要 Android 包名：'+name,2)
+                if args.command=='hold':held.update(args.names)
+                else:held.difference_update(args.names)
+                data[key]=sorted(held);write_json(CONFIG/'holds.json',data)
+            out.event('锁定',key,target=key,packages=sorted(held))
+            if not args.json:
+                for name in sorted(held):print(name)
+            return 0
+        if program=='apkm' and args.command in ('versions','policy'):
+            packages=catalog(out,args.target_source) if args.target_source else catalog(out)
+            package=resolve_package(packages,args.name)
+            if args.command=='versions':
+                for v in package.get('variants',[package]):out.event('版本',f'{v["version_code"]} {v["version_name"]} {v["abis"]}',package=v)
+            else:out.event('候选',json.dumps(package,ensure_ascii=False),package=package)
+            return 0
+        if args.command in ('cache-info','clean'):
+            cache_action(args,out);return 0
+        if args.command in ('file-info','contents'):
+            if args.command=='file-info':
+                data=local_file_info(args.path);out.event('文件',json.dumps(data,ensure_ascii=False),file=data)
+            else:
+                with zipfile.ZipFile(Path(args.path).expanduser()) as z:
+                    if len(z.infolist())>100000:raise Failure('归档条目过多',4)
+                    for entry in z.infolist():out.event('条目',f'{entry.file_size} {entry.filename!r}',name=entry.filename,size=entry.file_size)
+            return 0
+        if program=='apkg' and args.command=='install' and args.simulate:
+            for name in args.names:out.event('计划','Install local file; target selection/signatures not checked',file=local_file_info(name))
+            return 0
+        if program=='apkm' and args.command=='list':
+            packages=catalog(out,args.target_source) if args.target_source else catalog(out)
+            backend=Backend(args,out) if args.installed or args.upgradable else None
+            installed=set(backend.installed()) if backend else set()
+            device=backend.device_info() if args.upgradable else None
+            for name,p in packages.items():
+                if not (fnmatch.fnmatchcase(name,args.pattern) or fnmatch.fnmatchcase(p['package_id'],args.pattern)):continue
+                if backend and p['package_id'] not in installed:continue
+                current=backend.version(p['package_id']) if backend else None
+                if device:
+                    try:p=select_variant(p,*device)
+                    except Failure:continue
+                    if current is None or current>=p['version_code']:continue
+                out.event('软件',f'{name} {p["version_name"]}'+(f' [installed: {current}]' if backend else ''),package=p,installed_version=current)
+            return 0
         if args.command=='moo':
             message=(MAMA_ART+'\n\n..."Niu Lai!"...') if args.variant else (NIU_LAI_ART+'\n\n..."Ma Ma!"...')
             if args.json: out.event('moo',message)
@@ -736,22 +947,40 @@ def main(argv=None,program=None):
                 if n not in configured:raise Failure(f'软件源不存在：{n}',2)
             for n in selected:refresh(n,configured[n],out)
             return 0
+        if program=='apkm' and args.command=='install':
+            local=[Path(n).expanduser().is_file() or '/' in n or n.startswith('.') for n in args.names]
+            if any(local):
+                if not all(local):raise Failure('本地路径和软件源名称请分开安装',2)
+                if args.download_only:raise Failure('本地文件无需 download-only',2)
+                for name in args.names:
+                    if not Path(name).expanduser().is_file():raise Failure('本地文件不存在：'+name,2)
+                for name in args.names:
+                    if args.simulate:out.event('计划',f'Install local file {name}; device selection/signatures not checked',file=local_file_info(name))
+                    else:invoke_apkg(Path(name).expanduser(),args,out)
+                return 0
         if program=='apkm' and args.command in ['search','info','install','upgrade']:
-            packages=catalog(out)
+            packages=catalog(out,args.target_source) if args.target_source else catalog(out)
             if args.command=='search':
                 for name,p in packages.items():
-                    if args.keyword.lower() in (name+' '+p.get('description','')+' '+p['package_id']).lower():
+                    text=(name+' '+p['package_id']+('' if args.names_only else ' '+p.get('description',''))).lower()
+                    match=all(term.lower() in text for term in args.keyword)
+                    if args.exact:match=len(args.keyword)==1 and args.keyword[0].lower() in (name.lower(),p['package_id'].lower())
+                    if match:
                         out.event('软件',f'{name} {p["version_name"]} — {p.get("description", "")}',package=p)
                 return 0
             if args.command=='info':
                 if args.name not in packages:raise Failure('源中没有这个软件',2)
-                out.event('软件',json.dumps(packages[args.name],ensure_ascii=False),package=packages[args.name]);return 0
+                p=packages[args.name]
+                text='\n'.join(f'{key}: {p.get(key, "unknown")}' for key in ('name','package_id','version_name','version_code','source_name','min_sdk','abis','size','source_url'))
+                out.event('软件',text,package=p);return 0
             backend=None if args.download_only else Backend(args,out)
             if args.command=='upgrade' and not args.names:
                 installed=set(backend.installed());args.names=[n for n,p in packages.items() if p['package_id'] in installed]
-            for name in args.names:
-                if name not in packages:raise Failure(f'源中没有 {name}',2)
-                p=packages[name]
+            prepared=[(name,resolve_package(packages,name)) for name in args.names]
+            held=set(target_holds(backend)) if backend and args.command=='upgrade' else set()
+            for name,p in prepared:
+                if p['package_id'] in held:
+                    out.event('跳过',f'{name} held for this connection');continue
                 if backend:
                     sdk,abis=backend.device_info()
                     p=select_variant(p,sdk,abis)
@@ -763,9 +992,11 @@ def main(argv=None,program=None):
                     version=backend.version(p['package_id'])
                     if args.command=='upgrade' and version is None:
                         out.event('跳过',f'{name} 未安装');continue
-                    if version is not None and version>=p['version_code']:
+                    if version is not None and (version>p['version_code'] or (version==p['version_code'] and not args.reinstall)):
                         out.event('跳过',f'{name} 已安装相同或更新版本');continue
                 if not backend:p=select_variant(p)
+                out.event('计划',f'{name}: versionCode={p["version_code"]}, {p["size"]} bytes',package=p,action='reinstall' if args.reinstall else 'install')
+                if args.simulate:continue
                 path=download(p,args,out)
                 if backend:
                     args.mode=backend.mode
@@ -778,9 +1009,16 @@ def main(argv=None,program=None):
                         cleanup_apk(path,out)
             return 0
         if args.command=='remove':
+            pattern=r'[A-Za-z][A-Za-z0-9_]*(?:\.[A-Za-z][A-Za-z0-9_]*)+'
+            if program=='apkm' and (args.target_source or any(not re.fullmatch(pattern,n) for n in args.names)):
+                packages=catalog(out,args.target_source) if args.target_source else catalog(out)
+                args.names=[packages[n]['package_id'] if n in packages else n for n in args.names]
             args.names=list(dict.fromkeys(args.names))
             for name in args.names:
                 if not re.fullmatch(r'[A-Za-z][A-Za-z0-9_]*(?:\.[A-Za-z][A-Za-z0-9_]*)+',name):raise Failure('Invalid Android package ID: '+name,2)
+            if args.simulate:
+                for name in args.names:out.event('计划','Remove '+name+' and its data',package_id=name)
+                return 0
             if not args.yes:
                 if args.json or not sys.stdin.isatty():raise Failure('Uninstall requires --yes or interactive confirmation',2)
                 if input('Uninstall apps and their data: '+', '.join(args.names)+'? Type yes: ')!='yes':raise Failure('Cancelled',1)
@@ -791,15 +1029,22 @@ def main(argv=None,program=None):
         if args.command=='doctor':
             sdk,abis=backend.device_info();out.event('检查',f'API {sdk}，ABI {", ".join(abis)}',sdk=sdk,abis=abis)
         elif args.command=='list':
-            for package in backend.installed():out.event('应用',package,package_id=package)
+            if args.system or args.user_apps:
+                result=backend.shell(['pm','list','packages','-s' if args.system else '-3']).stdout
+                packages=[line[8:] for line in result.splitlines() if line.startswith('package:')]
+            else:packages=backend.installed()
+            for package in packages:
+                if fnmatch.fnmatchcase(package,args.pattern):out.event('应用',package,package_id=package)
         elif args.command=='info':
             version=backend.version(args.name)
             if version is None:raise Failure('应用不存在或无法读取版本',5)
-            out.event('应用',f'{args.name} versionCode={version}',package_id=args.name,version_code=version)
+            paths=[line.removeprefix('package:') for line in backend.shell(['pm','path',args.name]).stdout.splitlines() if line.startswith('package:')]
+            out.event('应用',f'{args.name} versionCode={version}\n'+'\n'.join(paths),package_id=args.name,version_code=version,apk_paths=paths)
         elif args.command=='install':
             for name in args.names:
                 path=Path(name).expanduser()
-                if path.suffix.lower().lstrip('.') in ARCHIVE_FORMATS: install_archive(path,backend,out)
+                if args.simulate:out.event('计划','Install local file; signature/device split checks occur at install',file=local_file_info(path))
+                elif path.suffix.lower().lstrip('.') in ARCHIVE_FORMATS: install_archive(path,backend,out,args.bundletool)
                 else: check_apk(path);backend.install(path)
         elif args.command=='remove':
             for name in args.names:backend.remove(name)
@@ -808,7 +1053,7 @@ def main(argv=None,program=None):
         if args.json:out.event('错误',str(e),exit_code=e.code)
         else:print(f'错误：{e}',file=sys.stderr)
         return e.code
-    except (OSError,ValueError,subprocess.TimeoutExpired) as e:
+    except (OSError,ValueError,zipfile.BadZipFile,RuntimeError,subprocess.TimeoutExpired) as e:
         if args.json:out.event('错误',str(e),exit_code=1)
         else:print(f'错误：{e}',file=sys.stderr)
         return 1

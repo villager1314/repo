@@ -25,7 +25,8 @@
 
 [1mGLOBAL OPTIONS[0m
        --mode auto|adb|root, --serial SERIAL, --json, --no-progress, -y/--yes,
-       -v/--version and -h/--help. Options precede the command.
+       -v/--version and -h/--help. Common global options may precede or follow
+       the command.
 
 [1mPERMISSIONS[0m
        ADB  requires  device  authorization,  not Android root.  Root mode re‐
@@ -34,11 +35,12 @@
 
 [1mLIMITATIONS[0m
        Supports  one-base split archives and universal bundletool APKS. Multi-
-       variant toc.pb sets require prior bundletool extraction.  Unknown  con‐
-       figuration targeting is rejected. OBB is skipped with an explicit warn‐
-       ing; app resources may be incomplete.  Local validation checks ZIP for‐
-       mat and AndroidManifest.xml presence; Android performs the installation
-       and signature checks.
+       variant toc.pb sets require optional --bundletool JAR  (and  separately
+       installed  Java) or prior device extraction. Unknown configuration tar‐
+       geting is rejected. OBB is skipped with an explicit  warning;  app  re‐
+       sources  may be incomplete.  Local validation checks ZIP format and An‐
+       droidManifest.xml presence; Android performs the installation and  sig‐
+       nature checks.
 
 [1mEXIT STATUS[0m
        See  apkm(1). A successful installation requires Android to report Suc‐
@@ -87,4 +89,16 @@
        --version for the version, and -y or --yes to skip uninstall  confirma‐
        tion.
 
-apkg 0.4.2                        2026-10-16                           [4mAPKG[24m(1)
+
+[1mDPKG STYLE ALIASES[0m
+       -i/--install   PATH  ...;  -r/--remove  ID  ...;  -l/--list  [PATTERN];
+       -s/--status  ID;  -I/--info  PATH;  -c/--contents  PATH.    info/status
+       queries  a  device, while file-info/-I inspects local metadata offline.
+       contents lists ZIP entries offline. list supports --system  or  --user-
+       apps.  -h/-?/--help shows help. --simulate/--dry-run previews local in‐
+       stalls  and  removals; -s is reserved for installed status, not simula‐
+       tion.  --bundletool JAR uses user-installed Java and an official JAR to
+       extract a device set from complex APKS archives. No external JAR is au‐
+       tomatically downloaded.
+
+apkg 0.5.0                        2026-10-16                           [4mAPKG[24m(1)

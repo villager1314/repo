@@ -8,6 +8,17 @@ Versions below describe client behavior. Dates are omitted where the original re
 - Troubleshooting, maintenance and contribution guides; issue and pull-request templates.
 - CI checks and GitHub release publication with distinct Debian/Termux assets and checksums.
 
+## 0.5.0
+
+- Complete four scoped improvements with a per-item feasibility/results review.
+- Add show/reinstall/download, local frontend installation, selected DPKG aliases, flexible common global options and strict long flags.
+- Add repository list/filtering, richer info, local file inspection/contents and managed cache usage/cleaning.
+- Add read-only simulations, explicit sources, numeric version selection, cached policy/versions and connection-scoped upgrade holds.
+- Add optional official bundletool extraction for complex APKS; Java/JAR remain user-supplied.
+- Change apkm list to repository entries; apkg list remains device applications.
+- Retain Android signature enforcement, no automatic downgrade, OBB skipping and temporary cleanup.
+- Document deferred features instead of providing no-op Debian commands.
+
 ## 0.4.2
 
 - Show help and exit successfully when APKM/APKG is run without arguments.

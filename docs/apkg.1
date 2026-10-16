@@ -1,4 +1,4 @@
-.TH APKG 1 "2026-10-16" "apkg 0.4.2" "User Commands"
+.TH APKG 1 "2026-10-16" "apkg 0.5.0" "User Commands"
 .SH NAME
 apkg \- local APK installation backend
 .SH SYNOPSIS
@@ -23,14 +23,15 @@ Uninstall after confirmation; application data may be removed by Android.
 Check backend selection and target Android SDK/ABI.
 .SH GLOBAL OPTIONS
 --mode auto|adb|root, --serial SERIAL, --json, --no-progress, -y/--yes,
--v/--version and -h/--help. Options precede the command.
+-v/--version and -h/--help. Common global options may precede or follow the command.
 .SH PERMISSIONS
 ADB requires device authorization, not Android root.
 Root mode requires Android host su and package-manager access; a Linux uid of
 zero is insufficient. No backend bypasses Android signature checks.
 .SH LIMITATIONS
 Supports one-base split archives and universal bundletool APKS. Multi-variant
-toc.pb sets require prior bundletool extraction. Unknown configuration targeting
+toc.pb sets require optional --bundletool JAR (and separately installed Java)
+or prior device extraction. Unknown configuration targeting
 is rejected. OBB is skipped with an explicit warning; app resources may be incomplete.
 Local validation checks ZIP format and AndroidManifest.xml presence; Android
 performs the installation and signature checks.
@@ -69,3 +70,13 @@ Explicit --mode auto permits authorized ADB to verified host-root fallback.
 Running without arguments prints help and exits successfully, without accessing
 a device or repository. Use -h or --help for help, -v or --version for the
 version, and -y or --yes to skip uninstall confirmation.
+
+.SH DPKG STYLE ALIASES
+-i/--install PATH ...; -r/--remove ID ...; -l/--list [PATTERN];
+-s/--status ID; -I/--info PATH; -c/--contents PATH.
+info/status queries a device, while file-info/-I inspects local metadata offline.
+contents lists ZIP entries offline. list supports --system or --user-apps.
+-h/-?/--help shows help. --simulate/--dry-run previews local installs and removals;
+-s is reserved for installed status, not simulation.
+--bundletool JAR uses user-installed Java and an official JAR to extract a device
+set from complex APKS archives. No external JAR is automatically downloaded.

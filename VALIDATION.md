@@ -48,3 +48,7 @@ Default backend parser behavior and explicit root/auto modes are checked. Existi
 ## 0.4.2 help and aliases
 
 65 tests pass, including no-argument help without backend/repository access and short version/confirmation aliases for both commands. Existing archive, default-ADB, signature and cache coverage remains.
+
+## 0.5.0 four-step improvements
+
+85 automated tests pass, including new command/option aliases, local delegation without sources, equal-version reinstall without downgrade, offline query/list behavior, managed-only cleanup and symlink preservation, no-write simulation, selected-source conflict resolution, versionCode selection, connection-scoped holds and upgrade enforcement, optional bundletool specification/command checks and failure handling. Added release-version consistency checks. Real official bundletool 1.18.3 successfully extracted a minimal valid protobuf toc archive containing an actual F-Droid APK; the selected APK's binary metadata was then parsed. Android installation remained mocked. This does not establish complete multi-variant/asset-delivery support or physical-device validation.

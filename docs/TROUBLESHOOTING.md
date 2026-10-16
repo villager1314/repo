@@ -16,11 +16,15 @@
 | Linux root but installation denied | Use authorized ADB. Root installation requires Android host `su` and `pm`, not Linux/chroot/PRoot uid 0. |
 | Termux gpgv says libgcrypt is too old | Try `apt install --only-upgrade libgcrypt libgpg-error`, then `gpgv --version` and `apt update`. If stale indexes cannot provide matching libraries, obtain the matching-architecture package from the official Termux source and validate it before manual recovery; see the Termux guide. |
 | Termux wants clang/LLVM/pip | Install with `apt install --no-install-recommends apkm`. Runtime dependencies remain required. |
-| Remove requests confirmation in scripts | Use `apkm --yes remove PACKAGE-ID`; global flags precede the command. Removal normally deletes data. |
+| Remove requests confirmation in scripts | Use `apkm --yes remove PACKAGE-ID`; common global flags may precede or follow the command. Removal normally deletes data. |
 | App still present after removal | Inspect the selected device and Android's returned error. APKM reports a failed absence check. Work profiles, managed apps and system components may require separate Android administration; automatic system-app removal is not provided. |
 
 For a report, include client version, host environment, device Android version/ABI, backend, command and redacted output. Remove pairing codes, tokens and private keys. Include whether the error occurs with `apkg` directly. Physical-device behavior should be reported separately from mocked tests.
 
 ## Archive installation (0.4.0)
 
-Use `apkg install ./application.apkm` (or .apks/.xapk), not `apkm install` with a local path. If a toc.pb multi-variant archive is rejected, extract the target device's APK set using official bundletool first. Unknown targeting is rejected rather than installing every variant. An OBB warning means APK installation may succeed but game data has not been deployed. See [archive support](ARCHIVES.md).
+Use `apkg install ./application.apkm` (or .apks/.xapk), not `apkm install` with a local path. If a toc.pb multi-variant archive is rejected, supply --bundletool with a trusted official JAR and Java installed, or extract the target device set first. Unknown targeting is rejected rather than installing every variant. An OBB warning means APK installation may succeed but game data has not been deployed. See [archive support](ARCHIVES.md).
+
+## 0.5.0 behavior changes
+
+`apkm list` lists the repository cache; use `apkg list` for all installed apps. Source duplicates require --source. NAME=VERSION uses numeric versionCode. Reinstall skips downgrades. A wireless connection's changed serial/IP/port has a different hold scope; use showhold on the current connection. Simulations do not prove signature compatibility or real-device success.
