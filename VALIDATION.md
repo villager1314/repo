@@ -52,3 +52,7 @@ Default backend parser behavior and explicit root/auto modes are checked. Existi
 ## 0.5.0 four-step improvements
 
 85 automated tests pass, including new command/option aliases, local delegation without sources, equal-version reinstall without downgrade, offline query/list behavior, managed-only cleanup and symlink preservation, no-write simulation, selected-source conflict resolution, versionCode selection, connection-scoped holds and upgrade enforcement, optional bundletool specification/command checks and failure handling. Added release-version consistency checks. Real official bundletool 1.18.3 successfully extracted a minimal valid protobuf toc archive containing an actual F-Droid APK; the selected APK's binary metadata was then parsed. Android installation remained mocked. This does not establish complete multi-variant/asset-delivery support or physical-device validation.
+
+## 0.5.1 name lookup
+
+90 tests pass, including multilingual metadata retention, search scopes, exact Unicode-normalized name resolution, version pinning, and ambiguous-name rejection before backend/download. Physical-device coverage is unchanged.

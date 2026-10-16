@@ -8,6 +8,13 @@ Versions below describe client behavior. Dates are omitted where the original re
 - Troubleshooting, maintenance and contribution guides; issue and pull-request templates.
 - CI checks and GitHub release publication with distinct Debian/Termux assets and checksums.
 
+## 0.5.1
+
+- Preserve F-Droid localized names, summaries and descriptions for cached search.
+- Include display names in --names-only/--exact and show package IDs in results.
+- Resolve unique full display names for repository install/download/reinstall/upgrade and info/version queries; reject ambiguity before device access.
+- Run apkm update once after upgrading to refresh older normalized caches.
+
 ## 0.5.0
 
 - Complete four scoped improvements with a per-item feasibility/results review.

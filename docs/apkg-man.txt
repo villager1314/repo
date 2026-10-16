@@ -101,4 +101,4 @@
        extract a device set from complex APKS archives. No external JAR is au‐
        tomatically downloaded.
 
-apkg 0.5.0                        2026-10-16                           [4mAPKG[24m(1)
+apkg 0.5.1                        2026-10-16                           [4mAPKG[24m(1)

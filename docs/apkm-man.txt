@@ -157,4 +157,13 @@
        get  split selection.  Other mutating commands reject simulation. Plans
        are per item, not atomic transactions.
 
-apkm 0.5.0                        2026-10-16                           [4mAPKM[24m(1)
+
+[1mAPPLICATION NAMES[0m
+       Run apkm update after upgrading to populate multilingual names.  Search
+       includes  localized names, summaries and descriptions. --names-only ex‐
+       cludes descriptions; --exact matches complete names. Repository  opera‐
+       tions  accept unique full display names; quote names containing spaces.
+       Exact repository names and Android IDs take precedence. Ambiguous names
+       stop with candidates before installation.
+
+apkm 0.5.1                        2026-10-16                           [4mAPKM[24m(1)

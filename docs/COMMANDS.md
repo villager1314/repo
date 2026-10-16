@@ -90,3 +90,7 @@ apkg install ./multivariant.apks --bundletool /trusted/path/bundletool-all.jar
 ```
 
 Supply an official bundletool JAR and an installed Java runtime yourself. Neither is automatically downloaded or added as a default dependency. APKG constructs a device specification from API/ABI/density/locales, invokes official extract-apks, validates its resulting APK set and then uses the existing ADB/root installer. This optional bridge does not implement the protobuf selection engine itself, and does not add asset-pack/OBB installation. See [archive details](ARCHIVES.md).
+
+## Application name lookup (0.5.1)
+
+After upgrading, run `apkm update` once to populate multilingual metadata. Search matches all indexed names, summaries and descriptions; `--names-only` matches repository names, Android IDs and display names, while `--exact` matches a complete name. Installation, download, reinstall, upgrade with explicit names, show/info, versions and policy accept a unique complete display name. Quote names containing spaces: `apkm install "Example App"`. Android IDs and exact repository names take precedence. Duplicate display names produce candidates and stop before device access/download; use the listed repository name/package ID and --source where needed. No fuzzy installation or automatic translation is performed. Existing remove behavior is unchanged.

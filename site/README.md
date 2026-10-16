@@ -1,11 +1,11 @@
 # APKM / APKG — Android APK manager
 
-[简体中文](https://github.com/villager1314/repo/blob/main/README.zh-CN.md) | English
+[简体中文](README.zh-CN.md) | English
 
 [![CI](https://github.com/villager1314/repo/actions/workflows/ci.yml/badge.svg)](https://github.com/villager1314/repo/actions/workflows/ci.yml)
 [![Pages](https://github.com/villager1314/repo/actions/workflows/pages.yml/badge.svg)](https://github.com/villager1314/repo/actions/workflows/pages.yml)
-[![Version](https://img.shields.io/badge/version-0.5.0-blue)](https://github.com/villager1314/repo/releases)
-[![License: MIT](https://img.shields.io/badge/license-MIT-green)](https://github.com/villager1314/repo/blob/main/LICENSE)
+[![Version](https://img.shields.io/badge/version-0.5.1-blue)](https://github.com/villager1314/repo/releases)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
 Download verified APKs from signed repositories and install them through authorized ADB or Android host root. **APKM is the repository frontend; APKG is the installation backend.** The name APKM refers to this project, not the `.apkm` container format. APKG manages Android apps, not Arch Linux pkg archives. Standalone APKs and selected split-APK archive layouts are supported; see [archive support](https://github.com/villager1314/repo/blob/main/docs/ARCHIVES.md).
 
@@ -45,7 +45,7 @@ APKM resolves repository metadata, verifies downloads and reads live JSON events
 | Arch / Arch Linux ARM | Arch `any` package | x86_64, aarch64 |
 | Termux, standard `com.termux` prefix | Separate Termux `all` package | aarch64, x86_64 |
 
-CachyOS compatibility remains to be tested. Linux root, chroot root and PRoot simulated root do not grant Android host root. Physical Android installation/removal and native Arch/ARM64/Termux compatibility remain outside the completed test coverage; see [validation](https://github.com/villager1314/repo/blob/main/VALIDATION.md).
+CachyOS compatibility remains to be tested. Linux root, chroot root and PRoot simulated root do not grant Android host root. Physical Android installation/removal and native Arch/ARM64/Termux compatibility remain outside the completed test coverage; see [validation](VALIDATION.md).
 
 ## Install
 
@@ -143,7 +143,7 @@ Run `apkm` or `apkg` without arguments to show help. `-h` / `--help` shows help,
 
 Help uses Chinese for `zh` locales and English otherwise. The manuals are English; runtime logs are still mostly Chinese. `LC_ALL=C` overrides other locale settings when requesting English help.
 
-## New in 0.5.0
+## New in 0.5.1
 
 ```sh
 apkm show com.example.app
@@ -175,7 +175,7 @@ apkm source set-url fdroid https://mirrors.tuna.tsinghua.edu.cn/fdroid/repo
 
 TUNA and NYIST mirror F-Droid's main repository, not the third-party repositories listed above. Mirror switching retains the trusted key and rollback checks. APKs are deleted only after successful installation and installed-version confirmation. Failed installs and download-only operations retain them; `--keep-apk` preserves successful downloads. APKG never deletes user-supplied local APKs.
 
-Version 0.5.0 supports one-base APKM/APKS/XAPK archives through ADB and Android host root. OBB files are skipped with an explicit warning. Universal bundletool APKS work; multi-variant `toc.pb` sets use the optional `--bundletool JAR` adapter with Java installed separately. See [archive support](https://github.com/villager1314/repo/blob/main/docs/ARCHIVES.md) for selection and limits. Updates do not bypass signing conflicts by uninstalling apps. The self-hosted APK repository starts empty; maintainers must add APKs they have permission to distribute.
+Version 0.5.1 supports one-base APKM/APKS/XAPK archives through ADB and Android host root. OBB files are skipped with an explicit warning. Universal bundletool APKS work; multi-variant `toc.pb` sets use the optional `--bundletool JAR` adapter with Java installed separately. See [archive support](https://github.com/villager1314/repo/blob/main/docs/ARCHIVES.md) for selection and limits. Updates do not bypass signing conflicts by uninstalling apps. The self-hosted APK repository starts empty; maintainers must add APKs they have permission to distribute.
 
 ## Troubleshooting
 
@@ -190,14 +190,18 @@ python3 scripts/check_repositories.py
 
 Repository checks require `dpkg-deb`, APT, `gpgv` and `zstd`, and operate with isolated APT state. Builds additionally require signing tools. [Maintainer instructions](https://github.com/villager1314/repo/blob/main/docs/MAINTAINING.md) cover package builds, signing and release assets. GitHub Pages publishes `site/`; private signing keys must never enter the repository or CI.
 
-[Changelog](https://github.com/villager1314/repo/blob/main/CHANGELOG.md) · [Releases](https://github.com/villager1314/repo/releases) · [Contributing](https://github.com/villager1314/repo/blob/main/CONTRIBUTING.md) · [Report an issue](https://github.com/villager1314/repo/issues/new/choose)
+[Changelog](CHANGELOG.md) · [Releases](https://github.com/villager1314/repo/releases) · [Contributing](CONTRIBUTING.md) · [Report an issue](https://github.com/villager1314/repo/issues/new/choose)
 
 ## Documentation
 
 - [Termux](https://github.com/villager1314/repo/blob/main/docs/TERMUX.md), [F-Droid](https://github.com/villager1314/repo/blob/main/docs/FDROID.md), [other APK sources](https://github.com/villager1314/repo/blob/main/docs/APK-SOURCES.md): detailed guides currently in Chinese.
 - [Archive support](https://github.com/villager1314/repo/blob/main/docs/ARCHIVES.md): APKM/APKS/XAPK layout support, OBB behavior and examples.
-- [Troubleshooting](https://github.com/villager1314/repo/blob/main/docs/TROUBLESHOOTING.md), [maintenance](https://github.com/villager1314/repo/blob/main/docs/MAINTAINING.md), [contributing](https://github.com/villager1314/repo/blob/main/CONTRIBUTING.md): English.
-- [Validation](https://github.com/villager1314/repo/blob/main/VALIDATION.md): versioned test coverage and device limitations.
+- [Troubleshooting](https://github.com/villager1314/repo/blob/main/docs/TROUBLESHOOTING.md), [maintenance](https://github.com/villager1314/repo/blob/main/docs/MAINTAINING.md), [contributing](CONTRIBUTING.md): English.
+- [Validation](VALIDATION.md): versioned test coverage and device limitations.
 - English man pages: [apkm](https://github.com/villager1314/repo/blob/main/docs/apkm.1), [apkg](https://github.com/villager1314/repo/blob/main/docs/apkg.1).
 
-Licensed under [MIT](https://github.com/villager1314/repo/blob/main/LICENSE).
+Licensed under [MIT](LICENSE).
+
+## Application name lookup (0.5.1)
+
+After upgrading, run `apkm update` once to populate multilingual metadata. Search matches all indexed names, summaries and descriptions; `--names-only` matches repository names, Android IDs and display names, while `--exact` matches a complete name. Installation, download, reinstall, upgrade with explicit names, show/info, versions and policy accept a unique complete display name. Quote names containing spaces: `apkm install "Example App"`. Android IDs and exact repository names take precedence. Duplicate display names produce candidates and stop before device access/download; use the listed repository name/package ID and --source where needed. No fuzzy installation or automatic translation is performed. Existing remove behavior is unchanged.

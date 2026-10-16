@@ -2,7 +2,7 @@ Origin: APKM-Termux
 Label: APKM-Termux
 Suite: stable
 Architectures: aarch64 x86_64 all
-Date: Fri, 16 Oct 2026 01:35:10 +0000
+Date: Fri, 16 Oct 2026 02:54:43 +0000
 SHA256:
- 2e22e568936feaf5c81c8816b6cd95e2cd4179c24e474fdfe746aaae5fe5ac99 7032 Packages
- 86db5265f7ad2af5f09986ac68a416bc22cd34e67a6aea92a7c909d4242988a7 1582 Packages.gz
+ a3d546bafe3bed0f0e4f32937feb6aa79ee83d433e24ad23b485f5a00758f637 7618 Packages
+ 6df016a8bd191cb3a4f725d042a4b8a99068b6bc8ecd9902543f0ef0414161be 1684 Packages.gz

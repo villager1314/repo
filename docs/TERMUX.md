@@ -264,3 +264,7 @@ apkm clean --simulate
 ```
 
 常用全局参数支持后置。多变体 APKS 可显式使用 --bundletool JAR，但 Java/JAR 不会默认安装；不要因此拉入不需要的大依赖。[完整命令](https://github.com/villager1314/repo/blob/main/docs/COMMANDS.md) · [四步核对](https://github.com/villager1314/repo/blob/main/docs/FOUR-STEPS.md)。
+
+## 应用名称检索（0.5.1）
+
+升级后先运行一次 `apkm update`，补齐多语言元数据。搜索覆盖索引中的各语言名称、简介和描述；`--names-only` 仅查源内名称、安卓包名和显示名称，`--exact` 匹配完整名称。安装、下载、重装、指定应用升级及详情/版本查询支持唯一的完整显示名称，例如 `apkm install "应用名称"`。含空格的名称需要引号。精确源内名称和包名优先；显示名称重名时列出候选并停止，不连接设备或下载，改用准确名称/包名及必要的 `--source`。不做模糊名称自动安装或自动翻译。卸载名称规则维持原有行为。

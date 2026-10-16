@@ -4,7 +4,7 @@
 
 [![CI](https://github.com/villager1314/repo/actions/workflows/ci.yml/badge.svg)](https://github.com/villager1314/repo/actions/workflows/ci.yml)
 [![Pages](https://github.com/villager1314/repo/actions/workflows/pages.yml/badge.svg)](https://github.com/villager1314/repo/actions/workflows/pages.yml)
-[![Version](https://img.shields.io/badge/version-0.5.0-blue)](https://github.com/villager1314/repo/releases)
+[![Version](https://img.shields.io/badge/version-0.5.1-blue)](https://github.com/villager1314/repo/releases)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
 Download verified APKs from signed repositories and install them through authorized ADB or Android host root. **APKM is the repository frontend; APKG is the installation backend.** The name APKM refers to this project, not the `.apkm` container format. APKG manages Android apps, not Arch Linux pkg archives. Standalone APKs and selected split-APK archive layouts are supported; see [archive support](docs/ARCHIVES.md).
@@ -143,7 +143,7 @@ Run `apkm` or `apkg` without arguments to show help. `-h` / `--help` shows help,
 
 Help uses Chinese for `zh` locales and English otherwise. The manuals are English; runtime logs are still mostly Chinese. `LC_ALL=C` overrides other locale settings when requesting English help.
 
-## New in 0.5.0
+## New in 0.5.1
 
 ```sh
 apkm show com.example.app
@@ -175,7 +175,7 @@ apkm source set-url fdroid https://mirrors.tuna.tsinghua.edu.cn/fdroid/repo
 
 TUNA and NYIST mirror F-Droid's main repository, not the third-party repositories listed above. Mirror switching retains the trusted key and rollback checks. APKs are deleted only after successful installation and installed-version confirmation. Failed installs and download-only operations retain them; `--keep-apk` preserves successful downloads. APKG never deletes user-supplied local APKs.
 
-Version 0.5.0 supports one-base APKM/APKS/XAPK archives through ADB and Android host root. OBB files are skipped with an explicit warning. Universal bundletool APKS work; multi-variant `toc.pb` sets use the optional `--bundletool JAR` adapter with Java installed separately. See [archive support](docs/ARCHIVES.md) for selection and limits. Updates do not bypass signing conflicts by uninstalling apps. The self-hosted APK repository starts empty; maintainers must add APKs they have permission to distribute.
+Version 0.5.1 supports one-base APKM/APKS/XAPK archives through ADB and Android host root. OBB files are skipped with an explicit warning. Universal bundletool APKS work; multi-variant `toc.pb` sets use the optional `--bundletool JAR` adapter with Java installed separately. See [archive support](docs/ARCHIVES.md) for selection and limits. Updates do not bypass signing conflicts by uninstalling apps. The self-hosted APK repository starts empty; maintainers must add APKs they have permission to distribute.
 
 ## Troubleshooting
 
@@ -201,3 +201,7 @@ Repository checks require `dpkg-deb`, APT, `gpgv` and `zstd`, and operate with i
 - English man pages: [apkm](docs/apkm.1), [apkg](docs/apkg.1).
 
 Licensed under [MIT](LICENSE).
+
+## Application name lookup (0.5.1)
+
+After upgrading, run `apkm update` once to populate multilingual metadata. Search matches all indexed names, summaries and descriptions; `--names-only` matches repository names, Android IDs and display names, while `--exact` matches a complete name. Installation, download, reinstall, upgrade with explicit names, show/info, versions and policy accept a unique complete display name. Quote names containing spaces: `apkm install "Example App"`. Android IDs and exact repository names take precedence. Duplicate display names produce candidates and stop before device access/download; use the listed repository name/package ID and --source where needed. No fuzzy installation or automatic translation is performed. Existing remove behavior is unchanged.

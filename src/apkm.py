@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""APKM/APKG 0.5.0: signed APK repository client and Android install backend."""
+"""APKM/APKG 0.5.1: signed APK repository client and Android install backend."""
+import unicodedata
 import argparse
 import struct
 import stat
@@ -20,7 +21,7 @@ import urllib.parse
 import urllib.request
 import zipfile
 
-VERSION = '0.5.0'
+VERSION = '0.5.1'
 BASE_URL = 'https://villager1314.github.io/repo'
 CONFIG = Path(os.environ.get('XDG_CONFIG_HOME', str(Path.home()/'.config'))) / 'apkm'
 CACHE = Path(os.environ.get('XDG_CACHE_HOME', str(Path.home()/'.cache'))) / 'apkm'
@@ -146,6 +147,9 @@ def normalize_fdroid(data):
     result = []
     for app in data['apps']:
         package = app['packageName']
+        localized = app.get('localized', {})
+        localized = {k: {f: v[f] for f in ('name','summary','description') if isinstance(v.get(f),str)} for k,v in localized.items() if isinstance(v,dict)} if isinstance(localized,dict) else {}
+        display_name = app.get('name') or localized.get('en-US',{}).get('name') or package
         suggested = app.get('suggestedVersionCode')
         variants = []
         for v in data['packages'].get(package, []):
@@ -154,7 +158,7 @@ def normalize_fdroid(data):
                 continue
             if v.get('hashType') != 'sha256' or not v.get('apkName', '').endswith('.apk'):
                 continue
-            item = dict(name=package, package_id=package,
+            item = dict(name=package, package_id=package, display_name=display_name, localized=localized,
                         description=app.get('name', app.get('localized', {}).get('en-US', {}).get('name', package)) + ' — ' + app.get('summary', app.get('localized', {}).get('en-US', {}).get('summary', '')),
                         version_code=int(v['versionCode']), version_name=v.get('versionName', ''),
                         min_sdk=int(v.get('minSdkVersion', v.get('sdkVersion', 1))), max_sdk=int(v.get('maxSdkVersion', 0)),
@@ -663,10 +667,44 @@ NIU_LAI_ART = '          /)             (\\\n         / |             | \\\n    
 MAMA_ART = '       /\\\n      /  \\               /|\n      |   \\             / |\n       \\   \\____________/  |\n    ___/       ____       \\__\n   /   \\      /    \\   __   \\\n   \\__  |        (o)   (o)  |\n      \\ |             ______/\n       \\|           /       \\\n        |          /   o     |\n        |         |          |\n        |          \\________/\n         \\          \\______/\n          \\_______________/\n           /          \\\n          /            \\'
 
 
+def name_key(value):
+    return ' '.join(unicodedata.normalize('NFKC', value).casefold().split())
+
+
+def package_names(package):
+    values=[package['name'],package['package_id']]
+    if isinstance(package.get('display_name'),str):values.append(package['display_name'])
+    localized=package.get('localized',{})
+    if isinstance(localized,dict):
+        values.extend(v['name'] for v in localized.values() if isinstance(v,dict) and isinstance(v.get('name'),str))
+    return list(dict.fromkeys(values))
+
+
+def search_package(package,terms,names_only=False,exact=False):
+    names=package_names(package)
+    if exact:return len(terms)==1 and name_key(terms[0]) in {name_key(v) for v in names}
+    values=list(names)
+    if not names_only:
+        values.append(package.get('description',''))
+        localized=package.get('localized',{})
+        if isinstance(localized,dict):
+            values.extend(v[f] for v in localized.values() if isinstance(v,dict) for f in ('summary','description') if isinstance(v.get(f),str))
+    text=name_key(' '.join(v for v in values if isinstance(v,str)))
+    return all(name_key(term) in text for term in terms)
+
+
 def resolve_package(packages,request):
     name,separator,version=request.partition('=')
-    if name not in packages:raise Failure('源中没有 '+name,2)
-    package=packages[name]
+    if name in packages:
+        package=packages[name]
+    else:
+        ids=[p for p in packages.values() if p['package_id']==name]
+        matches=ids or [p for p in packages.values() if name_key(name) in {name_key(v) for v in package_names(p)}]
+        if not matches:raise Failure('源中没有 '+name+'；请先运行 apkm search 查找应用',2)
+        if len(matches)>1:
+            choices='\n'.join(sorted(p['name']+' ['+p['package_id']+'] --source '+p.get('source_name','?') for p in matches))
+            raise Failure('应用名称不唯一，请使用准确的源内名称或包名：\n'+choices,2)
+        package=matches[0]
     if separator:
         if not version.isdigit():raise Failure('版本必须是数字 versionCode',2)
         matches=[v for v in package.get('variants',[package]) if v['version_code']==int(version)]
@@ -962,21 +1000,21 @@ def main(argv=None,program=None):
             packages=catalog(out,args.target_source) if args.target_source else catalog(out)
             if args.command=='search':
                 for name,p in packages.items():
-                    text=(name+' '+p['package_id']+('' if args.names_only else ' '+p.get('description',''))).lower()
-                    match=all(term.lower() in text for term in args.keyword)
-                    if args.exact:match=len(args.keyword)==1 and args.keyword[0].lower() in (name.lower(),p['package_id'].lower())
-                    if match:
-                        out.event('软件',f'{name} {p["version_name"]} — {p.get("description", "")}',package=p)
+                    if search_package(p,args.keyword,args.names_only,args.exact):
+                        label=p.get('display_name',name)
+                        out.event('软件',f'{label} [{p["package_id"]}] {p["version_name"]} — {p.get("description", "")}',package=p)
                 return 0
             if args.command=='info':
-                if args.name not in packages:raise Failure('源中没有这个软件',2)
-                p=packages[args.name]
-                text='\n'.join(f'{key}: {p.get(key, "unknown")}' for key in ('name','package_id','version_name','version_code','source_name','min_sdk','abis','size','source_url'))
+                p=resolve_package(packages,args.name)
+                text='\n'.join(f'{key}: {p.get(key, "unknown")}' for key in ('name','display_name','package_id','version_name','version_code','source_name','min_sdk','abis','size','source_url'))
                 out.event('软件',text,package=p);return 0
+            prepared=None
+            if args.command=='install' or args.names:
+                prepared=[(name,resolve_package(packages,name)) for name in args.names]
             backend=None if args.download_only else Backend(args,out)
             if args.command=='upgrade' and not args.names:
                 installed=set(backend.installed());args.names=[n for n,p in packages.items() if p['package_id'] in installed]
-            prepared=[(name,resolve_package(packages,name)) for name in args.names]
+            prepared=prepared if prepared is not None else [(name,resolve_package(packages,name)) for name in args.names]
             held=set(target_holds(backend)) if backend and args.command=='upgrade' else set()
             for name,p in prepared:
                 if p['package_id'] in held:

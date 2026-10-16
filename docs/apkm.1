@@ -1,4 +1,4 @@
-.TH APKM 1 "2026-10-16" "apkm 0.5.0" "User Commands"
+.TH APKM 1 "2026-10-16" "apkm 0.5.1" "User Commands"
 .SH NAME
 apkm \- signed Android APK repository client
 .SH SYNOPSIS
@@ -128,3 +128,10 @@ root connection; these affect upgrade only. Wireless port changes change scope.
 -s/--simulate/--dry-run previews install, upgrade, remove or clean without downloads
 or device modifications. Local-file previews do not perform target split selection.
 Other mutating commands reject simulation. Plans are per item, not atomic transactions.
+
+.SH APPLICATION NAMES
+Run apkm update after upgrading to populate multilingual names. Search includes
+localized names, summaries and descriptions. --names-only excludes descriptions;
+--exact matches complete names. Repository operations accept unique full display
+names; quote names containing spaces. Exact repository names and Android IDs
+take precedence. Ambiguous names stop with candidates before installation.
