@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""APKM/APKG 0.4.1: signed APK repository client and Android install backend."""
+"""APKM/APKG 0.4.2: signed APK repository client and Android install backend."""
 import argparse
 import struct
 import stat
@@ -19,7 +19,7 @@ import urllib.parse
 import urllib.request
 import zipfile
 
-VERSION = '0.4.1'
+VERSION = '0.4.2'
 BASE_URL = 'https://villager1314.github.io/repo'
 CONFIG = Path(os.environ.get('XDG_CONFIG_HOME', str(Path.home()/'.config'))) / 'apkm'
 CACHE = Path(os.environ.get('XDG_CACHE_HOME', str(Path.home()/'.cache'))) / 'apkm'
@@ -632,12 +632,12 @@ def parser(program):
     language=os.environ.get('LC_ALL') or os.environ.get('LC_MESSAGES') or os.environ.get('LANG','en')
     def tr(zh,en): return zh if language.lower().startswith('zh') else en
     p=argparse.ArgumentParser(prog=program,epilog=None if apkg else 'This APKM has Niu Lai Powers.',description=tr('安卓本地 APK 安装后端','Local Android APK installation backend') if apkg else tr('签名 APK 软件源客户端（Linux x86-64 / ARM64）','Signed APK repository client (Linux x86-64 / ARM64)'))
-    p.add_argument('--version',action='version',version=f'{program} {VERSION}')
+    p.add_argument('-v','--version',action='version',version=f'{program} {VERSION}')
     p.add_argument('--mode',choices=['auto','adb','root'],default='adb',help=tr('默认 adb；root 显式指定；auto 可自动回退','Default: adb; select root explicitly; auto permits fallback'))
     p.add_argument('--serial',help=tr('ADB 设备序列号；多个设备时必须指定','ADB serial; required with multiple devices'))
     p.add_argument('--json',action='store_true',help=tr('逐行 JSON 事件，供其他程序读取','Emit newline-delimited JSON events'))
     p.add_argument('--no-progress',action='store_true',help=tr('只显示阶段日志','Show stage messages only'))
-    p.add_argument('--yes',action='store_true',help=tr('跳过卸载确认，不绕过安卓授权','Skip uninstall confirmation, not Android authorization'))
+    p.add_argument('-y','--yes',action='store_true',help=tr('跳过卸载确认，不绕过安卓授权','Skip uninstall confirmation, not Android authorization'))
     s=p.add_subparsers(dest='command',required=True)
     if not apkg:
         moo=s.add_parser('moo',help=tr('牛来字符画彩蛋','Niu Lai terminal easter egg'))
@@ -689,7 +689,11 @@ def main(argv=None,program=None):
     if argv[:1]==['--as-apkg']:
         program='apkg';argv=argv[1:]
     program=program or ('apkg' if Path(sys.argv[0]).name=='apkg' else 'apkm')
-    args=parser(program).parse_args(argv);out=Output(args)
+    command_parser=parser(program)
+    if not argv:
+        command_parser.print_help()
+        return 0
+    args=command_parser.parse_args(argv);out=Output(args)
     try:
         if args.command=='moo':
             message=(MAMA_ART+'\n\n..."Niu Lai!"...') if args.variant else (NIU_LAI_ART+'\n\n..."Ma Ma!"...')

@@ -73,9 +73,10 @@
        [1m--no-progress[0m
               Disable intermediate download progress events.
 
-       [1m--yes  [22mSkip uninstall confirmation, not Android authorization.
+       [1m-y, --yes[0m
+              Skip uninstall confirmation, not Android authorization.
 
-       [1m--version | --help[0m
+       [1m-v, --version | -h, --help[0m
               Show version or help. Subcommands accept --help.
 
 [1mFILES[0m
@@ -129,4 +130,11 @@
        selects standalone  APKs.  The  add_apk.py  maintainer  helper  remains
        standalone-APK only.
 
-apkm 0.4.1                        2026-10-15                           [4mAPKM[24m(1)
+
+[1mHELP[0m
+       Running  without  arguments prints help and exits successfully, without
+       accessing a device or repository. Use -h or  --help  for  help,  -v  or
+       --version  for the version, and -y or --yes to skip uninstall confirma‐
+       tion.
+
+apkm 0.4.2                        2026-10-16                           [4mAPKM[24m(1)

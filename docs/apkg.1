@@ -1,4 +1,4 @@
-.TH APKG 1 "2026-10-15" "apkg 0.4.1" "User Commands"
+.TH APKG 1 "2026-10-16" "apkg 0.4.2" "User Commands"
 .SH NAME
 apkg \- local APK installation backend
 .SH SYNOPSIS
@@ -22,8 +22,8 @@ Uninstall after confirmation; application data may be removed by Android.
 .B doctor
 Check backend selection and target Android SDK/ABI.
 .SH GLOBAL OPTIONS
---mode auto|adb|root, --serial SERIAL, --json, --no-progress, --yes,
---version and --help. Options precede the command.
+--mode auto|adb|root, --serial SERIAL, --json, --no-progress, -y/--yes,
+-v/--version and -h/--help. Options precede the command.
 .SH PERMISSIONS
 ADB requires device authorization, not Android root.
 Root mode requires Android host su and package-manager access; a Linux uid of
@@ -64,3 +64,8 @@ Archive installation includes an installed-version check. Limits: 2048 ZIP entri
 .SH DEFAULT BACKEND
 ADB is the default: apkg install PATH. Root requires --mode root.
 Explicit --mode auto permits authorized ADB to verified host-root fallback.
+
+.SH HELP
+Running without arguments prints help and exits successfully, without accessing
+a device or repository. Use -h or --help for help, -v or --version for the
+version, and -y or --yes to skip uninstall confirmation.

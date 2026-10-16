@@ -1,5 +1,5 @@
-usage: apkg [-h] [--version] [--mode {auto,adb,root}] [--serial SERIAL]
-            [--json] [--no-progress] [--yes]
+usage: apkg [-h] [-v] [--mode {auto,adb,root}] [--serial SERIAL] [--json]
+            [--no-progress] [-y]
             {install,info,list,remove,doctor} ...
 
 Local Android APK installation backend
@@ -14,11 +14,11 @@ positional arguments:
 
 options:
   -h, --help            show this help message and exit
-  --version             show program's version number and exit
+  -v, --version         show program's version number and exit
   --mode {auto,adb,root}
                         Default: adb; select root explicitly; auto permits
                         fallback
   --serial SERIAL       ADB serial; required with multiple devices
   --json                Emit newline-delimited JSON events
   --no-progress         Show stage messages only
-  --yes                 Skip uninstall confirmation, not Android authorization
+  -y, --yes             Skip uninstall confirmation, not Android authorization

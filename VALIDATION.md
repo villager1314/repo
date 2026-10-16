@@ -44,3 +44,7 @@ Actual remote indexes normalized: Izzy 1399 apps / 2957 variants; Guardian 16 / 
 ## 0.4.1 default ADB
 
 Default backend parser behavior and explicit root/auto modes are checked. Existing simulated APKG archive installation now runs without --mode. No physical-device claims added.
+
+## 0.4.2 help and aliases
+
+65 tests pass, including no-argument help without backend/repository access and short version/confirmation aliases for both commands. Existing archive, default-ADB, signature and cache coverage remains.

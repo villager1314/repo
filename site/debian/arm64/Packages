@@ -148,3 +148,18 @@ Priority: optional
 Description: Signed APK repository client and Android installer
  Provides apkm and apkg commands for ADB and Android host root installation.
 
+Package: apkm
+Version: 0.4.2-1
+Architecture: all
+Maintainer: APKM Project <apkm@example.invalid>
+Depends: python3 (>= 3.9), adb, gpgv
+Filename: ./apkm_0.4.2-1_all.deb
+Size: 27444
+MD5sum: 5341e4e687de3e22517ccf22577496d6
+SHA1: 4f882a096431c963f3717c1ec2f38004488e9b99
+SHA256: e0c8d1feea0282a6fecc470f0f5fd7a89cd0fbd76a6d999773bc08c05fe1c55a
+Section: utils
+Priority: optional
+Description: Signed APK repository client and Android installer
+ Provides apkm and apkg commands for ADB and Android host root installation.
+

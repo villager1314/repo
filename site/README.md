@@ -4,7 +4,7 @@
 
 [![CI](https://github.com/villager1314/repo/actions/workflows/ci.yml/badge.svg)](https://github.com/villager1314/repo/actions/workflows/ci.yml)
 [![Pages](https://github.com/villager1314/repo/actions/workflows/pages.yml/badge.svg)](https://github.com/villager1314/repo/actions/workflows/pages.yml)
-[![Version](https://img.shields.io/badge/version-0.4.1-blue)](https://github.com/villager1314/repo/releases)
+[![Version](https://img.shields.io/badge/version-0.4.2-blue)](https://github.com/villager1314/repo/releases)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](https://github.com/villager1314/repo/blob/main/LICENSE)
 
 Download verified APKs from signed repositories and install them through authorized ADB or Android host root. **APKM is the repository frontend; APKG is the installation backend.** The name APKM refers to this project, not the `.apkm` container format. APKG manages Android apps, not Arch Linux pkg archives. Standalone APKs and selected split-APK archive layouts are supported; see [archive support](https://github.com/villager1314/repo/blob/main/docs/ARCHIVES.md).
@@ -138,6 +138,8 @@ man apkg
 
 Removal uses Android package IDs, requires confirmation or `--yes`, and normally deletes app data. Duplicate IDs are deduplicated, absent apps are skipped, and processing stops at the first failure. Successfully removed apps remain removed. Removal requires no repository index.
 
+Run `apkm` or `apkg` without arguments to show help. `-h` / `--help` shows help, `-v` / `--version` shows the version, and `-y` / `--yes` skips uninstall confirmation. Global flags precede the command.
+
 Help uses Chinese for `zh` locales and English otherwise. The manuals are English; runtime logs are still mostly Chinese. `LC_ALL=C` overrides other locale settings when requesting English help.
 
 ## Trust and cache
@@ -152,7 +154,7 @@ apkm source set-url fdroid https://mirrors.tuna.tsinghua.edu.cn/fdroid/repo
 
 TUNA and NYIST mirror F-Droid's main repository, not the third-party repositories listed above. Mirror switching retains the trusted key and rollback checks. APKs are deleted only after successful installation and installed-version confirmation. Failed installs and download-only operations retain them; `--keep-apk` preserves successful downloads. APKG never deletes user-supplied local APKs.
 
-Version 0.4.1 supports one-base APKM/APKS/XAPK archives through ADB and Android host root. OBB files are skipped with an explicit warning. Universal bundletool APKS work; multi-variant `toc.pb` sets require extraction with bundletool first. See [archive support](https://github.com/villager1314/repo/blob/main/docs/ARCHIVES.md) for selection and limits. Updates do not bypass signing conflicts by uninstalling apps. The self-hosted APK repository starts empty; maintainers must add APKs they have permission to distribute.
+Version 0.4.2 supports one-base APKM/APKS/XAPK archives through ADB and Android host root. OBB files are skipped with an explicit warning. Universal bundletool APKS work; multi-variant `toc.pb` sets require extraction with bundletool first. See [archive support](https://github.com/villager1314/repo/blob/main/docs/ARCHIVES.md) for selection and limits. Updates do not bypass signing conflicts by uninstalling apps. The self-hosted APK repository starts empty; maintainers must add APKs they have permission to distribute.
 
 ## Troubleshooting
 

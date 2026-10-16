@@ -1,4 +1,4 @@
-.TH APKM 1 "2026-10-15" "apkm 0.4.1" "User Commands"
+.TH APKM 1 "2026-10-16" "apkm 0.4.2" "User Commands"
 .SH NAME
 apkm \- signed Android APK repository client
 .SH SYNOPSIS
@@ -62,10 +62,10 @@ Emit newline-delimited JSON events.
 .B --no-progress
 Disable intermediate download progress events.
 .TP
-.B --yes
+.B -y, --yes
 Skip uninstall confirmation, not Android authorization.
 .TP
-.B --version | --help
+.B -v, --version | -h, --help
 Show version or help. Subcommands accept --help.
 .SH FILES
 .I $XDG_CONFIG_HOME/apkm/sources.json
@@ -106,3 +106,8 @@ Custom signed index entries may declare format apk, apkm, apks or xapk.
 Size and SHA256 cover the entire archive; absent format means apk.
 Archive layout support and OBB skipping follow apkg(1). F-Droid still selects
 standalone APKs. The add_apk.py maintainer helper remains standalone-APK only.
+
+.SH HELP
+Running without arguments prints help and exits successfully, without accessing
+a device or repository. Use -h or --help for help, -v or --version for the
+version, and -y or --yes to skip uninstall confirmation.

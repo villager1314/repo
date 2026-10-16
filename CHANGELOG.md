@@ -8,6 +8,12 @@ Versions below describe client behavior. Dates are omitted where the original re
 - Troubleshooting, maintenance and contribution guides; issue and pull-request templates.
 - CI checks and GitHub release publication with distinct Debian/Termux assets and checksums.
 
+## 0.4.2
+
+- Show help and exit successfully when APKM/APKG is run without arguments.
+- Add -v/--version and -y/--yes aliases; retain -h/--help.
+- Help/version operations do not connect to Android or access repositories.
+
 ## 0.4.1
 
 - Default APKM/APKG to ADB, allowing `apkg install PATH` without a mode flag.

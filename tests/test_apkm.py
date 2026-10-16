@@ -60,6 +60,19 @@ class Tests(unittest.TestCase):
    self.assertEqual(m.parser(program).parse_args(['doctor']).mode,'adb')
    self.assertEqual(m.parser(program).parse_args(['--mode','root','doctor']).mode,'root')
    self.assertEqual(m.parser(program).parse_args(['--mode','auto','doctor']).mode,'auto')
+ def test_short_option_aliases(self):
+  for prog in ('apkm','apkg'):
+   args=m.parser(prog).parse_args(['-y','remove','com.example.app'])
+   self.assertTrue(args.yes)
+   for flag in ('-v','--version'):
+    with contextlib.redirect_stdout(io.StringIO()) as out:
+     with self.assertRaises(SystemExit) as code:m.parser(prog).parse_args([flag])
+    self.assertEqual(code.exception.code,0);self.assertIn(prog+' '+m.VERSION,out.getvalue())
+ def test_no_arguments_help_without_backend(self):
+  for prog in ('apkm','apkg'):
+   with patch.object(m,'Backend',side_effect=AssertionError('help must be offline')),patch.object(m,'catalog',side_effect=AssertionError('no repositories')),contextlib.redirect_stdout(io.StringIO()) as out:
+    self.assertEqual(m.main([],program=prog),0)
+   self.assertIn('usage:',out.getvalue());self.assertIn('-v, --version',out.getvalue())
  def test_help(self):
   for prog in ['apkm','apkg']:
    with contextlib.redirect_stdout(io.StringIO()):

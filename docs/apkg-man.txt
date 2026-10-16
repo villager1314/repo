@@ -24,24 +24,24 @@
        [1mdoctor [22mCheck backend selection and target Android SDK/ABI.
 
 [1mGLOBAL OPTIONS[0m
-       --mode  auto|adb|root,  --serial  SERIAL, --json, --no-progress, --yes,
-       --version and --help. Options precede the command.
+       --mode auto|adb|root, --serial SERIAL, --json, --no-progress, -y/--yes,
+       -v/--version and -h/--help. Options precede the command.
 
 [1mPERMISSIONS[0m
-       ADB requires device authorization, not Android  root.   Root  mode  re‐
-       quires  Android host su and package-manager access; a Linux uid of zero
+       ADB  requires  device  authorization,  not Android root.  Root mode re‐
+       quires Android host su and package-manager access; a Linux uid of  zero
        is insufficient. No backend bypasses Android signature checks.
 
 [1mLIMITATIONS[0m
-       Supports one-base split archives and universal bundletool APKS.  Multi-
-       variant  toc.pb  sets require prior bundletool extraction. Unknown con‐
+       Supports  one-base split archives and universal bundletool APKS. Multi-
+       variant toc.pb sets require prior bundletool extraction.  Unknown  con‐
        figuration targeting is rejected. OBB is skipped with an explicit warn‐
        ing; app resources may be incomplete.  Local validation checks ZIP for‐
        mat and AndroidManifest.xml presence; Android performs the installation
        and signature checks.
 
 [1mEXIT STATUS[0m
-       See apkm(1). A successful installation requires Android to report  Suc‐
+       See  apkm(1). A successful installation requires Android to report Suc‐
        cess.
 
 [1mSEE ALSO[0m
@@ -49,35 +49,42 @@
 
 
 [1mUNINSTALL[0m
-       Use  Android package IDs, even when the repository uses a different ap‐
-       plication name.  No repository index or  network  access  is  required.
+       Use Android package IDs, even when the repository uses a different  ap‐
+       plication  name.   No  repository  index or network access is required.
        APKM delegates removal to APKG.  All IDs are validated before confirma‐
        tion or device access.  Duplicate IDs are removed once; absent applica‐
-       tions  are  skipped.  Successful removal requires Android Success and a
-       subsequent absence check.  Removal normally deletes  application  data.
-       Noninteractive  and JSON use require --yes.  Stop on the first failure;
+       tions are skipped.  Successful removal requires Android Success  and  a
+       subsequent  absence  check.  Removal normally deletes application data.
+       Noninteractive and JSON use require --yes.  Stop on the first  failure;
        applications already removed remain removed.
 
 [1mLANGUAGE[0m
        This manual is in English. Help uses Chinese for zh locales and English
-       otherwise.  Use LANG=C apkm --help or LANG=C  apkg  --help  to  request
+       otherwise.   Use  LANG=C  apkm  --help or LANG=C apkg --help to request
        English help.
 
 
 [1mARCHIVES[0m
        For one-base archives, select compatible ABI splits, closest known den‐
-       sity  splits,  and all language splits. Check package IDs, versions and
-       split dependencies.  ADB uses install-multiple. Root uses  install-cre‐
+       sity splits, and all language splits. Check package IDs,  versions  and
+       split  dependencies.  ADB uses install-multiple. Root uses install-cre‐
        ate/write/commit and attempts install-abandon on failure. Android vali‐
-       dates  signatures  at  commit.   Temporary  extracted APKs are removed;
+       dates signatures at commit.   Temporary  extracted  APKs  are  removed;
        original local archives are retained.  Archive installation includes an
-       installed-version check. Limits: 2048 ZIP entries, 512 APKs, 2 GiB  per
+       installed-version  check. Limits: 2048 ZIP entries, 512 APKs, 2 GiB per
        entry and 8 GiB total declared uncompressed size.
 
 
 [1mDEFAULT BACKEND[0m
-       ADB  is the default: apkg install PATH. Root requires --mode root.  Ex‐
-       plicit --mode auto permits authorized ADB to verified  host-root  fall‐
+       ADB is the default: apkg install PATH. Root requires --mode root.   Ex‐
+       plicit  --mode  auto permits authorized ADB to verified host-root fall‐
        back.
 
-apkg 0.4.1                        2026-10-15                           [4mAPKG[24m(1)
+
+[1mHELP[0m
+       Running without arguments prints help and exits  successfully,  without
+       accessing  a  device  or  repository.  Use -h or --help for help, -v or
+       --version for the version, and -y or --yes to skip uninstall  confirma‐
+       tion.
+
+apkg 0.4.2                        2026-10-16                           [4mAPKG[24m(1)

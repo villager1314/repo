@@ -168,3 +168,20 @@ Homepage: https://github.com/villager1314/repo
 Description: APK repository client and Android installer for Termux
  Provides apkm and apkg, installed under the standard com.termux prefix.
 
+Package: apkm
+Version: 0.4.2-1
+Architecture: all
+Maintainer: APKM Project <apkm@example.invalid>
+Depends: python (>= 3.9), android-tools, gpgv
+Suggests: man
+Filename: ./apkm_0.4.2-1_all.deb
+Size: 27870
+MD5sum: 3c635769cd3bc096c6303d43a597f9fb
+SHA1: a8de3279bd21d1b2d39d99bf071454afbffd6ad8
+SHA256: 2587a6092ead36d9dc06f45fd06895df5431162685109fedd5926e1486338f4e
+Section: utils
+Priority: optional
+Homepage: https://github.com/villager1314/repo
+Description: APK repository client and Android installer for Termux
+ Provides apkm and apkg, installed under the standard com.termux prefix.
+
